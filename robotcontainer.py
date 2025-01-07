@@ -7,14 +7,14 @@ import wpilib
 import typing
 
 from commands2 import cmd, InstantCommand, RunCommand
-from commands2.button import JoystickButton
+from commands2.button import CommandGenericHID
 from wpilib import XboxController
 from wpimath.controller import PIDController, ProfiledPIDControllerRadians, HolonomicDriveController
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.trajectory import TrajectoryConfig, TrajectoryGenerator
 
 from constants import AutoConstants, DriveConstants, OIConstants
-from subsystems.drivesubsystem import DriveSubsystem
+from subsystems.drivesubsystem import DriveSubsystem, BadSimPhysics
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
 
@@ -26,36 +26,31 @@ class RobotContainer:
     subsystems, commands, and button mappings) should be declared here.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, robot) -> None:
         # The robot's subsystems
         self.robotDrive = DriveSubsystem()
+        if commands2.TimedCommandRobot.isSimulation():
+            self.robotDrive.simPhysics = BadSimPhysics(self.robotDrive, robot)
 
         # The driver's controller
-        self.driverController = wpilib.XboxController(OIConstants.kDriverControllerPort)
+        self.driverController = CommandGenericHID(OIConstants.kDriverControllerPort)
 
         # Configure the button bindings and autos
         self.configureButtonBindings()
         self.configureAutos()
 
-        # Configure default commands
+        # Configure default command for driving using sticks
+        from commands.holonomicdrive import HolonomicDrive
         self.robotDrive.setDefaultCommand(
-            # The left stick controls translation of the robot.
-            # Turning is controlled by the X axis of the right stick.
-            commands2.RunCommand(
-                lambda: self.robotDrive.drive(
-                    -wpimath.applyDeadband(
-                        self.driverController.getLeftY(), OIConstants.kDriveDeadband
-                    ),
-                    -wpimath.applyDeadband(
-                        self.driverController.getLeftX(), OIConstants.kDriveDeadband
-                    ),
-                    -wpimath.applyDeadband(
-                        self.driverController.getRightX(), OIConstants.kDriveDeadband
-                    ),
-                    True,
-                    True,
-                ),
+            HolonomicDrive(
                 self.robotDrive,
+                forwardSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftY),
+                leftSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftX),
+                rotationSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kRightX),
+                deadband=OIConstants.kDriveDeadband,
+                fieldRelative=True,
+                rateLimit=True,
+                square=True,
             )
         )
 
@@ -66,11 +61,11 @@ class RobotContainer:
         and then passing it to a JoystickButton.
         """
 
-        xButton = JoystickButton(self.driverController, XboxController.Button.kX)
+        xButton = self.driverController.button(XboxController.Button.kX)
         xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive))
         xButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))  # use the swerve X brake when "X" is pressed
 
-        yButton = JoystickButton(self.driverController, XboxController.Button.kY)
+        yButton = self.driverController.button(XboxController.Button.kY)
         yButton.onTrue(ResetSwerveFront(self.robotDrive))
 
     def disablePIDSubsystems(self) -> None:

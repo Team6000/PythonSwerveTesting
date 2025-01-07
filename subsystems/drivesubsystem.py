@@ -15,16 +15,20 @@ from wpimath.kinematics import (
 from wpilib import SmartDashboard, Field2d
 
 
-from constants import DriveConstants
+from constants import DriveConstants, ModuleConstants
 import swerveutils
 from .maxswervemodule import MAXSwerveModule
-from rev import CANSparkMax, CANSparkFlex
+from rev import SparkMax, SparkFlex
 import navx
 
 
 class DriveSubsystem(Subsystem):
-    def __init__(self) -> None:
+    def __init__(self, maxSpeedScaleFactor=None) -> None:
         super().__init__()
+        if maxSpeedScaleFactor is not None:
+            assert callable(maxSpeedScaleFactor)
+
+        self.maxSpeedScaleFactor = maxSpeedScaleFactor
 
         enabledChassisAngularOffset = 0 if DriveConstants.kAssumeZeroOffsets else 1
 
@@ -33,39 +37,41 @@ class DriveSubsystem(Subsystem):
             DriveConstants.kFrontLeftDrivingCanId,
             DriveConstants.kFrontLeftTurningCanId,
             DriveConstants.kFrontLeftChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=True,
-            motorControllerType=CANSparkFlex,
+            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
+            motorControllerType=SparkFlex,
         )
 
         self.frontRight = MAXSwerveModule(
             DriveConstants.kFrontRightDrivingCanId,
             DriveConstants.kFrontRightTurningCanId,
             DriveConstants.kFrontRightChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=True,
-            motorControllerType=CANSparkFlex,
+            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
+            motorControllerType=SparkFlex,
         )
 
         self.rearLeft = MAXSwerveModule(
             DriveConstants.kRearLeftDrivingCanId,
             DriveConstants.kRearLeftTurningCanId,
             DriveConstants.kBackLeftChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=True,
-            motorControllerType=CANSparkFlex,
+            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
+            motorControllerType=SparkFlex,
         )
 
         self.rearRight = MAXSwerveModule(
             DriveConstants.kRearRightDrivingCanId,
             DriveConstants.kRearRightTurningCanId,
             DriveConstants.kBackRightChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=True,
-            motorControllerType=CANSparkFlex,
+            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
+            motorControllerType=SparkFlex,
         )
 
         # The gyro sensor
         self.gyro = navx.AHRS.create_spi()
+        self._lastGyroAngleTime = 0
+        self._lastGyroAngle = 0
+        self._lastGyroState = "ok"
 
         # Slew rate filter variables for controlling lateral acceleration
-        self.currentRotation = 0.0
         self.currentTranslationDir = 0.0
         self.currentTranslationMag = 0.0
 
@@ -76,7 +82,7 @@ class DriveSubsystem(Subsystem):
         # Odometry class for tracking robot pose
         self.odometry = SwerveDrive4Odometry(
             DriveConstants.kDriveKinematics,
-            Rotation2d.fromDegrees(self.gyro.getAngle()),
+            Rotation2d(),
             (
                 self.frontLeft.getPosition(),
                 self.frontRight.getPosition(),
@@ -90,8 +96,13 @@ class DriveSubsystem(Subsystem):
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
 
+        self.simPhysics = None
+
 
     def periodic(self) -> None:
+        if self.simPhysics is not None:
+            self.simPhysics.periodic()
+
         # Update the odometry in the periodic block
         pose = self.odometry.update(
             self.getGyroHeading(),
@@ -124,6 +135,10 @@ class DriveSubsystem(Subsystem):
 
         """
         self.gyro.reset()
+        self.gyro.setAngleAdjustment(0)
+        self._lastGyroAngleTime = 0
+        self._lastGyroAngle = 0
+
         self.odometry.resetPosition(
             self.getGyroHeading(),
             (
@@ -135,9 +150,6 @@ class DriveSubsystem(Subsystem):
             pose,
         )
         self.odometryHeadingOffset = self.odometry.getPose().rotation() - self.getGyroHeading()
-
-        self.field = Field2d()
-        SmartDashboard.putData("Field", self.field)
 
 
     def adjustOdometry(self, dTrans: Translation2d, dRot: Rotation2d):
@@ -155,16 +167,16 @@ class DriveSubsystem(Subsystem):
         )
         self.odometryHeadingOffset += dRot
 
+    def stop(self):
+        self.arcadeDrive(0, 0)
+
     def arcadeDrive(
         self,
         xSpeed: float,
         rot: float,
         assumeManualInput: bool = False,
     ) -> None:
-        if assumeManualInput:
-            xSpeed = xSpeed * abs(xSpeed)
-            rot = rot * abs(rot)
-        self.drive(xSpeed, 0, rot, False, False)
+        self.drive(xSpeed, 0, rot, False, False, square=assumeManualInput)
 
     def rotate(self, rotSpeed) -> None:
         """
@@ -180,6 +192,7 @@ class DriveSubsystem(Subsystem):
         rot: float,
         fieldRelative: bool,
         rateLimit: bool,
+        square: bool = False
     ) -> None:
         """Method to drive the robot using joystick info.
 
@@ -189,7 +202,21 @@ class DriveSubsystem(Subsystem):
         :param fieldRelative: Whether the provided x and y speeds are relative to the
                               field.
         :param rateLimit:     Whether to enable rate limiting for smoother control.
+        :param square:        Whether to square the inputs (useful for manual control)
         """
+
+        if square:
+            rot = rot * abs(rot)
+            norm = math.sqrt(xSpeed * xSpeed + ySpeed * ySpeed)
+            xSpeed = xSpeed * norm
+            ySpeed = ySpeed * norm
+
+        if (xSpeed != 0 or ySpeed != 0) and self.maxSpeedScaleFactor is not None:
+            norm = math.sqrt(xSpeed * xSpeed + ySpeed * ySpeed)
+            scale = abs(self.maxSpeedScaleFactor() / norm)
+            if scale < 1:
+                xSpeed = xSpeed * scale
+                ySpeed = ySpeed * scale
 
         xSpeedCommanded = xSpeed
         ySpeedCommanded = ySpeed
@@ -314,16 +341,28 @@ class DriveSubsystem(Subsystem):
         self.frontRight.resetEncoders()
         self.rearRight.resetEncoders()
 
-    def zeroHeading(self) -> None:
-        """Zeroes the heading of the robot."""
-        self.gyro.reset()
-
     def getGyroHeading(self) -> Rotation2d:
-        """Returns the heading of the robot.
+        """Returns the heading of the robot, tries to be smart when gyro is disconnected
 
         :returns: the robot's heading as Rotation2d
         """
-        return Rotation2d.fromDegrees(self.gyro.getAngle() * DriveConstants.kGyroReversed)
+        now = wpilib.Timer.getFPGATimestamp()
+        past = self._lastGyroAngleTime
+        state = "ok"
+
+        if not self.gyro.isConnected():
+            state = "disconnected"
+        else:
+            if self.gyro.isCalibrating():
+                state = "calibrating"
+            self._lastGyroAngle = self.gyro.getAngle()
+            self._lastGyroAngleTime = now
+
+        if state != self._lastGyroState:
+            SmartDashboard.putString("gyro", f"{state} after {int(now - past)}s")
+            self._lastGyroState = state
+
+        return Rotation2d.fromDegrees(self._lastGyroAngle * DriveConstants.kGyroReversed)
 
 
     def getTurnRate(self) -> float:
@@ -340,3 +379,45 @@ class DriveSubsystem(Subsystem):
         :returns: The turn rate of the robot, in degrees per second
         """
         return self.getTurnRate() * 180 / math.pi
+
+
+class BadSimPhysics(object):
+    """
+    this is the wrong way to do it, it does not scale!!!
+    the right way is shown here: https://github.com/robotpy/examples/blob/main/Physics/src/physics.py
+    and documented here: https://robotpy.readthedocs.io/projects/pyfrc/en/stable/physics.html
+    (but for a swerve drive it will take some work to add correctly)
+    """
+    def __init__(self, drivetrain: DriveSubsystem, robot: wpilib.RobotBase):
+        self.drivetrain = drivetrain
+        self.robot = robot
+        self.t = 0
+
+    def periodic(self):
+        past = self.t
+        self.t = wpilib.Timer.getFPGATimestamp()
+        if past == 0:
+            return  # it was first time
+
+        dt = self.t - past
+        if self.robot.isEnabled():
+            drivetrain = self.drivetrain
+
+            states = (
+                drivetrain.frontLeft.desiredState,
+                drivetrain.frontRight.desiredState,
+                drivetrain.rearLeft.desiredState,
+                drivetrain.rearRight.desiredState,
+            )
+            speeds = DriveConstants.kDriveKinematics.toChassisSpeeds(states)
+
+            dx = speeds.vx * dt
+            dy = speeds.vy * dt
+
+            heading = drivetrain.getHeading()
+            trans = Translation2d(dx, dy).rotateBy(heading)
+            rot = (speeds.omega * 180 / math.pi) * dt
+
+            g = drivetrain.gyro
+            g.setAngleAdjustment(g.getAngleAdjustment() + rot * DriveConstants.kGyroReversed)
+            drivetrain.adjustOdometry(trans, Rotation2d())

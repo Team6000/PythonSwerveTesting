@@ -2,18 +2,29 @@
 
 **WARNINGS**
 
-* YOU DEFINITELY NEED TO CHECK THE SENSOR/MOTOR DIRECTIONS at low values of initialP and zero initialD, please watch the video
+* Make sure that your absolute encoder is zeroed in such a way that the arm never has to go through zero (or get even close to it) during normal operation
 
-* YOU DEFINITELY NEED TO TUNE THE initialP and initialD constants yourself, for your own robot geometry mass and gear ratio
+* You can safely verify the direction of angle encoder by checking if `armAngle` and `armPosition` move in same direction on SmartDashboard (when you move that arm by hand, while robot is disabled for safety)
 
-* You might need to assign different addresses (CAN IDs), inside the snippet below
+* For safety, use low value of `initialP` and zero `initialD` while verifying the directions, please watch the video
+
+* After you are confident in encoder direction, to tune initialP keep increasing it by factor of no more than 2 until you see oscillations (each robot geometry/mass/gear-ratio needs its own P)
+
+* If you see oscillations at the level of `initialP` that you prefer, you can set nonzero value of `initialD` to dampen them (start `initialD` with a small value and keep doubling it until you see desired effect).
+
+* If you are seeing arm not exactly reaching its angle goal (on SmartDashboard), you need to change `initialStaticGainTimesP`
+
+(if you need a more systematic way to tune P and D without involving I, look up Cohen-Coon or Ziegler-Nichols method on Wikipedia, use the version with I=0)
 
 
 **This code snippet can go to `subsystems/arm.py`**
+
 ```python
-from rev import CANSparkMax, CANSparkBase, SparkLimitSwitch, SparkAbsoluteEncoder
+
+from rev import SparkMax, SparkBase, SparkBaseConfig, LimitSwitchConfig, ClosedLoopConfig
 from wpimath.geometry import Rotation2d
 from commands2 import Subsystem
+from wpilib import SmartDashboard
 
 # constants right here, to simplify the video
 class ArmConstants:
@@ -34,21 +45,17 @@ class ArmConstants:
     fudgeFactor = 1  # empirical, if needed
     motorRevolutionsPerDegree = gearReduction * chainReduction / 360 * fudgeFactor
 
-    kArmAngleToEjectIntoAmp = 106  # start ejecting note into amp from this angle
-    kArmAngleToPushIntoAmp = 79  # after ejecting note into, drop the arm to this angle to push the note in
-    kArmAgleToSaveEnergy = 75  # increase after we use both absolute and relative encoders
-    kArmAngleToShootDefault = 55
     kArmMinAngle = 15
     kArmMaxAngle = 130
+    kArmMaxWeightAngle = 30
+    kAngleTolerance = 2.0
 
     # PID coefficients
     initialStaticGainTimesP = 3.5  # we are normally this many degrees off because of static forces
     initialD = 25e-2 * 0.2
-    initialP = 2e-2 * 1.0
+    initialP = 0.8e-2 * 1.0
     additionalPMult = 3.0  # when close to target angle
 
-    # 8 * 700 = 2800
-    initialFF = 0
     initialMaxOutput = 1
     initialMinOutput = -1
     initialMaxRPM = 5700
@@ -66,60 +73,72 @@ class ArmConstants:
 
 class Arm(Subsystem):
     def __init__(
-        self, leadMotorCANId: int, followMotorCANId: int, dontSlam: bool
+        self,
+        leadMotorCANId: int,
+        followMotorCANId: int,
+        dontSlam: bool=False,
+        limitSwitchType=LimitSwitchConfig.Type.kNormallyOpen,  # make NormallyOpen if you don't have limit switches yet
+        dashboardPrefix="",  # set it to "front_" if this is a front arm in a multi-arm robot
     ) -> None:
         """Constructs an arm. Be very very careful with setting PIDs -- arms are dangerous"""
         super().__init__()
         self.dontSlam = dontSlam
+        self.armAngleLabel = dashboardPrefix + "armAngle"
+        self.armAngleGoalLabel = dashboardPrefix + "armAngleGoal"
+        self.armPositionLabel = dashboardPrefix + "armPosition"
+        self.armStateLabel = dashboardPrefix + "armState"
 
-        self.leadMotor = CANSparkMax(leadMotorCANId, CANSparkMax.MotorType.kBrushless)
-        self.leadMotor.restoreFactoryDefaults()
+        self.leadMotor = SparkMax(leadMotorCANId, SparkMax.MotorType.kBrushless)
+        self.leadMotor.configure(
+            _getLeadMotorConfig(limitSwitchType, ArmConstants.kEncoderPositionFactor, ArmConstants.kEncoderInverted),
+            SparkBase.ResetMode.kResetSafeParameters,
+            SparkBase.PersistMode.kPersistParameters)
 
-        self.forwardLimit = self.leadMotor.getForwardLimitSwitch(SparkLimitSwitch.Type.kNormallyOpen)
-        self.reverseLimit = self.leadMotor.getReverseLimitSwitch(SparkLimitSwitch.Type.kNormallyOpen)
+        self.forwardLimit = self.leadMotor.getForwardLimitSwitch()
+        self.reverseLimit = self.leadMotor.getReverseLimitSwitch()
 
-        self.followMotor = CANSparkMax(followMotorCANId, CANSparkMax.MotorType.kBrushless)
-        self.followMotor.restoreFactoryDefaults()
-
-        self.setMotorDirections()
+        self.followMotor = None
+        if followMotorCANId is not None:
+            self.followMotor = SparkMax(followMotorCANId, SparkMax.MotorType.kBrushless)
+            followConfig = SparkBaseConfig()
+            followConfig.follow(leadMotorCANId, invert=True)
+            self.followMotor.configure(
+                followConfig,
+                SparkBase.ResetMode.kResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters)
 
         # now initialize pid controller and encoder
-        self.pidController = self.leadMotor.getPIDController()
-        self.encoder = self.leadMotor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle)
-
-        self.relativeEncoder = self.leadMotor.getEncoder()  # this encoder can be used instead of absolute, if you know!
-        self.encoder.setPositionConversionFactor(ArmConstants.kEncoderPositionFactor)
-        self.encoder.setVelocityConversionFactor(
-            ArmConstants.kEncoderPositionFactor * ArmConstants.kEncoderPositionToVelocityFactor)
-        self.encoder.setInverted(ArmConstants.kEncoderInverted)
-
-        self.relativeEncoder.setPositionConversionFactor(1 / ArmConstants.motorRevolutionsPerDegree)
-        self.relativeEncoder.setVelocityConversionFactor(
-            ArmConstants.kEncoderPositionToVelocityFactor / ArmConstants.motorRevolutionsPerDegree)
-
-        self.pidController.setP(ArmConstants.initialP)
-        self.pidController.setD(ArmConstants.initialD)
-        self.pidController.setFF(ArmConstants.initialFF)
-        self.pidController.setOutputRange(ArmConstants.initialMinOutput, ArmConstants.initialMaxOutput)
-        self.pidController.setIZone(0)
-        self.pidController.setI(0)
-
-        self.pidController.setIMaxAccum(0, 0)  # not playing with integral terms, they can explode
-        self.pidController.setIAccum(0)  # not playing with integral terms, they can explode
-
-        smartMotionSlot = 0
-        self.pidController.setFeedbackDevice(self.encoder)
-        self.pidController.setSmartMotionMaxVelocity(ArmConstants.initialMaxVel, smartMotionSlot)
-        self.pidController.setSmartMotionMinOutputVelocity(ArmConstants.initialMinVel, smartMotionSlot)
-        self.pidController.setSmartMotionMaxAccel(ArmConstants.initialMaxAcc, smartMotionSlot)
-        self.pidController.setSmartMotionAllowedClosedLoopError(ArmConstants.initialAllowedError, smartMotionSlot)
-
-        self.leadMotor.burnFlash()  # otherwise the "inverted" setting will not survive the brownout
-        self.followMotor.burnFlash()  # otherwise the "inverted" setting will not survive the brownout
+        self.pidController = self.leadMotor.getClosedLoopController()
+        self.encoder = self.leadMotor.getAbsoluteEncoder()
+        self.relativeEncoder = self.leadMotor.getEncoder()
 
         # first angle goal
         self.angleGoal = ArmConstants.kArmMinAngle
         self.setAngleGoal(self.angleGoal)
+
+
+    def periodic(self) -> None:
+        SmartDashboard.putNumber(self.armAngleGoalLabel, self.angleGoal)
+        SmartDashboard.putNumber(self.armAngleLabel, self.getAngle())
+        SmartDashboard.putNumber(self.armPositionLabel, self.relativeEncoder.getPosition())
+        SmartDashboard.putString(self.armStateLabel, self.getState())
+
+
+    def getState(self) -> str:
+        if self.forwardLimit.get():
+            return "forward limit" if not self.reverseLimit.get() else "both limits (CAN disconn?)"
+        if self.reverseLimit.get():
+            return "reverse limit"
+        # otherwise, everything is ok
+        return "ok"
+
+
+    def isDoneMoving(self) -> bool:
+        return abs(self.getAngleGoal() - self.getAngle()) < ArmConstants.kAngleTolerance
+
+
+    def getAngleGoal(self) -> float:
+        return self.angleGoal
 
 
     def getAngle(self) -> float:
@@ -140,48 +159,61 @@ class Arm(Subsystem):
         if self.dontSlam and self.angleGoal <= ArmConstants.kArmMinAngle:
             # we don't want to slam the arm on the floor, but the target angle is pretty low
             if self.getAngle() > ArmConstants.kArmMinAngle:
-                self.pidController.setP(ArmConstants.initialP * 0.4)
-                self.pidController.setReference(ArmConstants.kArmMinAngle, CANSparkMax.ControlType.kPosition)
+                self.pidController.setReference(ArmConstants.kArmMinAngle, SparkBase.ControlType.kPosition)
             else:
                 self.stopAndReset()
         else:
-            self.pidController.setP(ArmConstants.initialP * 0.4)
-            # regular case: use adjustment for static forces
-            # (to mimic what static gain would do, because SparkMax doesn't support static gain directly)
+            # static forces for the arm depend on arm angle (e.g. if it's at the top, no static forces)
             adjustment = ArmConstants.initialStaticGainTimesP * \
-                         Rotation2d.fromDegrees(self.angleGoal - ArmConstants.kArmMinAngle).cos() / \
-                         self.getAngleDependentPFudgeFactor(self.angleGoal)
-            self.pidController.setReference(self.angleGoal + adjustment, CANSparkMax.ControlType.kPosition)
+                         Rotation2d.fromDegrees(self.angleGoal - ArmConstants.kArmMinAngle).cos()
+            self.pidController.setReference(self.angleGoal + adjustment, SparkBase.ControlType.kPosition)
 
 
     def stopAndReset(self) -> None:
         self.leadMotor.stopMotor()
-        self.followMotor.stopMotor()
-        self.setMotorDirections()
+        if self.followMotor is not None:
+            self.followMotor.stopMotor()
         self.leadMotor.clearFaults()
-        self.followMotor.clearFaults()
+        if self.followMotor is not None:
+            self.followMotor.clearFaults()
 
 
-    def getAngleDependentPFudgeFactor(self, angleDegrees: float) -> float:
-        """
-        Big hack: multiplier on top of the P gain, depending on angle
-        :param angleDegrees: angle to be used for that fudge factor
-        :return:
-        """
-        error = (angleDegrees - self.angleGoal) / ArmConstants.kAngleGoalRadius
-        if error > 1:
-          return 0.4
-        if max((self.angleGoal, angleDegrees)) > ArmConstants.kArmMinAngle + 90:
-          return 0.5
-        altitude = Rotation2d.fromDegrees(angleDegrees - ArmConstants.kArmMinAngle).sin()
-        additional = 3.0 * (1 - altitude * altitude) * max((0, 1 - abs(error)))
-        return 1 + additional
+def _getLeadMotorConfig(
+    limitSwitchType: LimitSwitchConfig.Type,
+    absPositionFactor: float,
+    absEncoderInverted: bool,
+) -> SparkBaseConfig:
 
-    def setMotorDirections(self) -> None:
-        self.leadMotor.setInverted(True)
-        self.leadMotor.setIdleMode(CANSparkBase.IdleMode.kBrake)
-        self.followMotor.follow(self.leadMotor, True)
-        self.followMotor.setIdleMode(CANSparkBase.IdleMode.kBrake)
+    config = SparkBaseConfig()
+    config.inverted(True)
+    config.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
+    config.limitSwitch.forwardLimitSwitchEnabled(True)
+    config.limitSwitch.reverseLimitSwitchEnabled(True)
+    config.limitSwitch.forwardLimitSwitchType(limitSwitchType)
+    config.limitSwitch.reverseLimitSwitchType(limitSwitchType)
+
+    relPositionFactor = 1.0  # can also make it = 1.0 / ArmConstants.motorRevolutionsPerDegree
+    config.encoder.positionConversionFactor(relPositionFactor)
+    config.encoder.velocityConversionFactor(relPositionFactor / 60)  # 60 seconds per minute
+
+    config.absoluteEncoder.positionConversionFactor(absPositionFactor)
+    config.absoluteEncoder.velocityConversionFactor(absPositionFactor / 60)  # 60 seconds per minute
+    config.absoluteEncoder.inverted(absEncoderInverted)
+    config.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
+
+    assert ArmConstants.kArmMaxAngle > ArmConstants.kArmMinAngle, (
+        f"ArmConstants.kArmMaxAngle={ArmConstants.kArmMaxAngle} is not greater than " +
+        f"ArmConstants.kArmMinAngle={ArmConstants.kArmMinAngle}"
+    )
+    config.softLimit.reverseSoftLimit(ArmConstants.kArmMinAngle)
+    config.softLimit.forwardSoftLimit(ArmConstants.kArmMaxAngle)
+
+    config.closedLoop.pid(ArmConstants.initialP, 0.0, ArmConstants.initialD)
+    config.closedLoop.velocityFF(0.0)  # because position control
+    config.closedLoop.outputRange(ArmConstants.initialMinOutput, ArmConstants.initialMaxOutput)
+
+    return config
+
 ```
 
 **This code snippet can go inside of the function `configureButtonBindings` in your `robotcontainer.py`, so you can drive the arm with the joystick:**
@@ -194,13 +226,13 @@ class Arm(Subsystem):
         """
 
         ## start of arm joystick control code
-        from commands2.button import JoystickButton
+        from commands2.button import CommandGenericHID
         from commands2 import RunCommand
 
-        aButton = JoystickButton(self.driverController, wpilib.XboxController.Button.kA)
+        aButton = self.driverController.button(wpilib.XboxController.Button.kA)
         aButton.onTrue(commands2.InstantCommand(lambda: self.arm.setAngleGoal(ArmConstants.kArmMinAngle)))
 
-        yButton = JoystickButton(self.driverController, wpilib.XboxController.Button.kY)
+        yButton = self.driverController.button(wpilib.XboxController.Button.kY)
         yButton.onTrue(commands2.InstantCommand(lambda: self.arm.setAngleGoal(70)))
         ## end of arm joystick control code
 ```

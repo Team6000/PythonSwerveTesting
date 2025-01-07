@@ -10,12 +10,13 @@ numerical or boolean constants. Don't use this for any other purpose!
 
 import math
 
+import rev
 from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfileRadians
 
-from rev import CANSparkMax
+from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 
 
 class NeoMotorConstants:
@@ -69,15 +70,47 @@ class DriveConstants:
     kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving)
 
 
+def getSwerveDrivingMotorConfig() -> SparkBaseConfig:
+    drivingConfig = SparkBaseConfig()
+    drivingConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
+    drivingConfig.smartCurrentLimit(ModuleConstants.kDrivingMotorCurrentLimit)
+    drivingConfig.encoder.positionConversionFactor(ModuleConstants.kDrivingEncoderPositionFactor)
+    drivingConfig.encoder.velocityConversionFactor(ModuleConstants.kDrivingEncoderVelocityFactor)
+    drivingConfig.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
+    drivingConfig.closedLoop.pid(ModuleConstants.kDrivingP, ModuleConstants.kDrivingI, ModuleConstants.kDrivingD)
+    drivingConfig.closedLoop.velocityFF(ModuleConstants.kDrivingFF)
+    drivingConfig.closedLoop.outputRange(ModuleConstants.kDrivingMinOutput, ModuleConstants.kDrivingMaxOutput)
+    return drivingConfig
+
+
+def getSwerveTurningMotorConfig(turnMotorInverted: bool) -> SparkBaseConfig:
+    turningConfig = SparkBaseConfig()
+    turningConfig.inverted(turnMotorInverted)
+    turningConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
+    turningConfig.smartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit)
+    turningConfig.absoluteEncoder.positionConversionFactor(ModuleConstants.kTurningEncoderPositionFactor)
+    turningConfig.absoluteEncoder.velocityConversionFactor(ModuleConstants.kTurningEncoderVelocityFactor)
+    turningConfig.absoluteEncoder.inverted(ModuleConstants.kTurningEncoderInverted)
+    turningConfig.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
+    turningConfig.closedLoop.pid(ModuleConstants.kTurningP, ModuleConstants.kTurningI, ModuleConstants.kTurningD)
+    turningConfig.closedLoop.velocityFF(ModuleConstants.kTurningFF)
+    turningConfig.closedLoop.outputRange(ModuleConstants.kTurningMinOutput, ModuleConstants.kTurningMaxOutput)
+    turningConfig.closedLoop.positionWrappingEnabled(True)
+    turningConfig.closedLoop.positionWrappingInputRange(0, ModuleConstants.kTurningEncoderPositionFactor)
+    return turningConfig
+
+
 class ModuleConstants:
+    # WATCH OUT:
+    #  - one or both of two constants below need to be flipped from True to False (by trial and error)
+    #  , depending which swerve module you have (MK4i, MK4n, Rev, WCP, ThriftyBot, etc)
+    kTurningEncoderInverted = True
+    kTurningMotorInverted = True
+
     # The MAXSwerve module can be configured with one of three pinion gears: 12T, 13T, or 14T.
     # This changes the drive speed of the module (a pinion gear with more teeth will result in a
     # robot that drives faster).
     kDrivingMotorPinionTeeth = 14
-
-    # Invert the turning encoder, since the output shaft rotates in the opposite direction of
-    # the steering motor in the MAXSwerve Module.
-    kTurningEncoderInverted = True
 
     # Calculations required for driving motor conversion factors and feed forward
     kDrivingMotorFreeSpeedRps = NeoMotorConstants.kFreeSpeedRpm / 60
@@ -116,13 +149,14 @@ class ModuleConstants:
     kTurningMinOutput = -1
     kTurningMaxOutput = 1
 
-    kDrivingMotorIdleMode = CANSparkMax.IdleMode.kBrake
-    kTurningMotorIdleMode = CANSparkMax.IdleMode.kBrake
+    kDrivingMotorIdleMode = SparkBase.IdleMode.kBrake
+    kTurningMotorIdleMode = SparkBase.IdleMode.kBrake
 
     kDrivingMotorCurrentLimit = 50  # amp
     kTurningMotorCurrentLimit = 20  # amp
 
     kDrivingMinSpeedMetersPerSecond = 0.01
+
 
 class OIConstants:
     kDriverControllerPort = 0
@@ -130,6 +164,9 @@ class OIConstants:
 
 
 class AutoConstants:
+    kUseSqrtControl = True  # improves arrival time and precision for simple driving commands
+
+    # below are really trajectory constants
     kMaxSpeedMetersPerSecond = 3
     kMaxAccelerationMetersPerSecondSquared = 3
     kMaxAngularSpeedRadiansPerSecond = math.pi
