@@ -9,14 +9,14 @@ class SwerveModule_CANCoder(SwerveModule):
             self,
             drivingCANId: int,
             turningCANId: int,
-            chassisAngularOffset: float, # TODO: Don't understand
+            moduleRotationOffset: float,
             cancoder_id: int,
             turnMotorInverted=False,
             driveMotorInverted=False,
             encoderInverted=False,
             motorControllerType=SparkMax,
     ) :
-        super().__init__(drivingCANId,turningCANId,chassisAngularOffset,turnMotorInverted,driveMotorInverted,encoderInverted,motorControllerType)
+        super().__init__(drivingCANId, turningCANId, moduleRotationOffset, turnMotorInverted, driveMotorInverted, encoderInverted, motorControllerType)
 
         # Gets CANCoder Abs Encoder Position
         self.cancoder_id = cancoder_id

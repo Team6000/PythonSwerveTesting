@@ -1,6 +1,7 @@
 from rev import SparkMax, SparkFlex, SparkLowLevel, SparkAbsoluteEncoder, SparkBase
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
+import math
 
 from constants import ModuleConstants, getSwerveDrivingMotorConfig, getSwerveTurningMotorConfig
 
@@ -10,18 +11,18 @@ class SwerveModule:
         self,
         drivingCANId: int,
         turningCANId: int,
-        chassisAngularOffset: float, # TODO: Don't understand
+        moduleRotationOffset: float,
         turnMotorInverted = False,
         driveMotorInverted = False,
         encoderInverted = False,
         motorControllerType = SparkMax
     ) -> None:
         """Constructs a SwerveModule and configures the driving and turning motor,
-        encoder, and PID controller. This configuration is specific to the REV
-        MAXSwerve Module built with NEOs, SPARKS MAX, and a Through Bore
+        encoder, and PID controller.
         Encoder.
         """
-        self.chassisAngularOffset = chassisAngularOffset
+
+        self.moduleRotationOffset = moduleRotationOffset * math.pi / 180 # degree -> radians
         self.desiredState = SwerveModuleState(0.0, Rotation2d())
 
         self.drivingSparkMax = motorControllerType(
@@ -45,9 +46,8 @@ class SwerveModule:
 
         # Setup encoders and PID controllers for the driving and turning SPARKS MAX.
 
-        #TODO: Not sure if this is correct?
         self.drivingEncoder = self.drivingSparkMax.getEncoder()
-        self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder()
+        self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder() # Would this get the Redux
 
         self.drivingPIDController = self.drivingSparkMax.getClosedLoopController()
         self.turningPIDController = self.turningSparkMax.getClosedLoopController()
@@ -64,7 +64,7 @@ class SwerveModule:
         # relative to the chassis.
         return SwerveModuleState(
             self.drivingEncoder.getVelocity(),
-            Rotation2d(self.turningEncoder.getPosition() - self.chassisAngularOffset),
+            Rotation2d(self.turningEncoder.getPosition() - self.moduleRotationOffset),
         )
 
     def getPosition(self) -> SwerveModulePosition:
@@ -76,7 +76,7 @@ class SwerveModule:
         # relative to the chassis.
         return SwerveModulePosition(
             self.drivingEncoder.getPosition(),
-            Rotation2d(self.turningEncoder.getPosition() - self.chassisAngularOffset),
+            Rotation2d(self.turningEncoder.getPosition() - self.moduleRotationOffset),
         )
 
     def setDesiredState(self, desiredState: SwerveModuleState) -> None:
@@ -97,7 +97,7 @@ class SwerveModule:
         correctedDesiredState = SwerveModuleState()
         correctedDesiredState.speed = desiredState.speed
         correctedDesiredState.angle = desiredState.angle + Rotation2d(
-            self.chassisAngularOffset
+            self.moduleRotationOffset
         )
 
         # Optimize the reference state to avoid spinning further than 90 degrees.
@@ -106,7 +106,7 @@ class SwerveModule:
             optimizedDesiredState, Rotation2d(self.turningEncoder.getPosition())
         )
 
-        # Command driving and turning SPARKS MAX towards their respective setpoints.
+        # Command driving and turning SPARKS MAX towards their respective set-points.
         self.drivingPIDController.setReference(
             optimizedDesiredState.speed, SparkLowLevel.ControlType.kVelocity
         )

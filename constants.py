@@ -46,31 +46,33 @@ class DriveConstants:
     ]
     kDriveKinematics = SwerveDrive4Kinematics(*kModulePositions)
 
-    # set it to True if you were using a ruler for zeroing and want to ignore the offsets below
-    kAssumeZeroOffsets = True
 
     # set the above to == False, if you are using Rev zeroing tool (and you have to tinker with offsets below)
-    kFrontLeftChassisAngularOffset = -math.pi / 2
-    kFrontRightChassisAngularOffset = 0
-    kBackLeftChassisAngularOffset = math.pi
-    kBackRightChassisAngularOffset = math.pi / 2
+
+
+
+
 
     # SPARK MAX CAN IDs
     kFrontLeftDrivingCanId = 11
     kFrontLeftTurningCanId = 12
     kFrontLeftCANCoderID = 13
+    kFrontLeftRotationOffset = 0
 
     kFrontRightDrivingCanId = 21
     kFrontRightTurningCanId = 22
     kFrontRightCANCoderID = None
+    kFrontRightRotationOffset = 0
 
     kBackLeftDrivingCanId = 31
     kBackLeftTurningCanId = 32
     kBackLeftCANCoderID = None
+    kBackLeftRotationOffset = 0
 
     kBackRightDrivingCanId = 41
     kBackRightTurningCanId = 42
     kBackRightCANCoderID = None
+    kBackRightRotationOffset = 0
 
 
 
