@@ -15,7 +15,7 @@ from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfileRadians
-
+from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 
 
@@ -70,8 +70,9 @@ class DriveConstants:
     kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving)
 
 
-def getSwerveDrivingMotorConfig() -> SparkBaseConfig:
+def getSwerveDrivingMotorConfig(drivingMotorInverted: bool) -> SparkBaseConfig:
     drivingConfig = SparkBaseConfig()
+    drivingConfig.inverted(drivingMotorInverted)
     drivingConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
     drivingConfig.smartCurrentLimit(ModuleConstants.kDrivingMotorCurrentLimit)
     drivingConfig.encoder.positionConversionFactor(ModuleConstants.kDrivingEncoderPositionFactor)
@@ -83,14 +84,14 @@ def getSwerveDrivingMotorConfig() -> SparkBaseConfig:
     return drivingConfig
 
 
-def getSwerveTurningMotorConfig(turnMotorInverted: bool) -> SparkBaseConfig:
+def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool) -> SparkBaseConfig:
     turningConfig = SparkBaseConfig()
     turningConfig.inverted(turnMotorInverted)
     turningConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
     turningConfig.smartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit)
     turningConfig.absoluteEncoder.positionConversionFactor(ModuleConstants.kTurningEncoderPositionFactor)
     turningConfig.absoluteEncoder.velocityConversionFactor(ModuleConstants.kTurningEncoderVelocityFactor)
-    turningConfig.absoluteEncoder.inverted(ModuleConstants.kTurningEncoderInverted)
+    turningConfig.absoluteEncoder.inverted(encoderInverted)
     turningConfig.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
     turningConfig.closedLoop.pid(ModuleConstants.kTurningP, ModuleConstants.kTurningI, ModuleConstants.kTurningD)
     turningConfig.closedLoop.velocityFF(ModuleConstants.kTurningFF)
@@ -101,11 +102,23 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool) -> SparkBaseConfig:
 
 
 class ModuleConstants:
-    # WATCH OUT:
-    #  - one or both of two constants below need to be flipped from True to False (by trial and error)
-    #  , depending which swerve module you have (MK4i, MK4n, Rev, WCP, ThriftyBot, etc)
-    kTurningEncoderInverted = True
-    kTurningMotorInverted = True
+
+    frontLeft_drive_inverted = False
+    frontLeft_turn_inverted = False
+    frontRight_drive_inverted = False
+    frontRight_turn_inverted = False
+    backLeft_drive_inverted = False
+    backLeft_turn_inverted = False
+    backRight_drive_inverted = False
+    backRight_turn_inverted = False
+
+
+
+    frontLeft_encoder_inverted = False
+    frontRight_encoder_inverted = False
+    backLeft_encoder_inverted = False
+    backRight_encoder_inverted = False
+
 
     # The MAXSwerve module can be configured with one of three pinion gears: 12T, 13T, or 14T.
     # This changes the drive speed of the module (a pinion gear with more teeth will result in a
