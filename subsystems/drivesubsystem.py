@@ -31,13 +31,11 @@ class DriveSubsystem(Subsystem):
 
         self.maxSpeedScaleFactor = maxSpeedScaleFactor
 
-        enabledChassisAngularOffset = 0 if DriveConstants.kAssumeZeroOffsets else 1
-
         # Create 4 Swerve Modules
         self.frontLeft = SwerveModule_CANCoder(
             DriveConstants.kFrontLeftDrivingCanId,
             DriveConstants.kFrontLeftTurningCanId,
-            DriveConstants.kFrontLeftChassisAngularOffset * enabledChassisAngularOffset,
+            DriveConstants.kFrontLeftRotationOffset,
             DriveConstants.kFrontLeftCANCoderID,
             turnMotorInverted=ModuleConstants.kfrontLeft_turn_inverted,
             driveMotorInverted= ModuleConstants.kfrontLeft_drive_inverted,
@@ -48,7 +46,7 @@ class DriveSubsystem(Subsystem):
         self.frontRight = SwerveModule(
             DriveConstants.kFrontRightDrivingCanId,
             DriveConstants.kFrontRightTurningCanId,
-            DriveConstants.kFrontRightChassisAngularOffset * enabledChassisAngularOffset,
+            DriveConstants.kFrontRightRotationOffset,
             turnMotorInverted=ModuleConstants.kfrontRight_turn_inverted,
             driveMotorInverted=ModuleConstants.kfrontRight_drive_inverted,
             encoderInverted=ModuleConstants.kfrontRight_encoder_inverted,
@@ -58,7 +56,7 @@ class DriveSubsystem(Subsystem):
         self.backLeft = SwerveModule(
             DriveConstants.kBackLeftDrivingCanId,
             DriveConstants.kBackLeftTurningCanId,
-            DriveConstants.kBackLeftChassisAngularOffset * enabledChassisAngularOffset,
+            DriveConstants.kBackLeftRotationOffset,
             turnMotorInverted=ModuleConstants.kbackLeft_turn_inverted,
             driveMotorInverted=ModuleConstants.kbackLeft_drive_inverted,
             encoderInverted=ModuleConstants.kbackLeft_encoder_inverted,
@@ -68,7 +66,7 @@ class DriveSubsystem(Subsystem):
         self.backRight = SwerveModule(
             DriveConstants.kBackRightDrivingCanId,
             DriveConstants.kBackRightTurningCanId,
-            DriveConstants.kBackRightChassisAngularOffset * enabledChassisAngularOffset,
+            DriveConstants.kBackRightRotationOffset,
             turnMotorInverted=ModuleConstants.kbackRight_turn_inverted,
             driveMotorInverted=ModuleConstants.kbackRight_drive_inverted,
             encoderInverted=ModuleConstants.kbackRight_encoder_inverted,
