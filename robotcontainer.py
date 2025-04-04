@@ -79,7 +79,7 @@ class RobotContainer:
         command = self.chosenAuto.getSelected()
         return command()
 
-    def configureAutos(self):
+    def configureAutos(self): # TODO: CHANGE TO PathPlanner
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
         self.chosenAuto.setDefaultOption("trajectory example", self.getAutonomousTrajectoryExample)

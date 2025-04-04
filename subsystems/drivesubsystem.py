@@ -17,7 +17,7 @@ from wpilib import SmartDashboard, Field2d
 
 from constants import DriveConstants, ModuleConstants
 import swerveutils
-from .maxswervemodule import MAXSwerveModule
+from swervemodule import SwerveModule
 from rev import SparkMax, SparkFlex
 import navx
 
@@ -33,36 +33,45 @@ class DriveSubsystem(Subsystem):
         enabledChassisAngularOffset = 0 if DriveConstants.kAssumeZeroOffsets else 1
 
         # Create MAXSwerveModules
-        self.frontLeft = MAXSwerveModule(
+        self.frontLeft = SwerveModule(
             DriveConstants.kFrontLeftDrivingCanId,
             DriveConstants.kFrontLeftTurningCanId,
             DriveConstants.kFrontLeftChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
-            motorControllerType=SparkFlex,
+            turnMotorInverted=ModuleConstants.frontLeft_turn_inverted,
+            driveMotorInverted= ModuleConstants.frontLeft_drive_inverted,
+            encoderInverted=ModuleConstants.frontLeft_encoder_inverted,
+            motorControllerType=SparkMax,
         )
 
-        self.frontRight = MAXSwerveModule(
+        self.frontRight = SwerveModule(
             DriveConstants.kFrontRightDrivingCanId,
             DriveConstants.kFrontRightTurningCanId,
             DriveConstants.kFrontRightChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
-            motorControllerType=SparkFlex,
+            turnMotorInverted=ModuleConstants.frontRight_turn_inverted,
+            driveMotorInverted=ModuleConstants.frontRight_drive_inverted,
+            encoderInverted=ModuleConstants.frontRight_encoder_inverted,
+            motorControllerType=SparkMax,
         )
 
-        self.rearLeft = MAXSwerveModule(
+        self.backLeft = SwerveModule(
             DriveConstants.kRearLeftDrivingCanId,
             DriveConstants.kRearLeftTurningCanId,
             DriveConstants.kBackLeftChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
-            motorControllerType=SparkFlex,
+            turnMotorInverted=ModuleConstants.backLeft_turn_inverted,
+            driveMotorInverted=ModuleConstants.backLeft_drive_inverted,
+            encoderInverted=ModuleConstants.backLeft_encoder_inverted,
+            motorControllerType=SparkMax,
         )
 
-        self.rearRight = MAXSwerveModule(
+        self.backRight = SwerveModule(
             DriveConstants.kRearRightDrivingCanId,
             DriveConstants.kRearRightTurningCanId,
             DriveConstants.kBackRightChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.kTurningMotorInverted,
-            motorControllerType=SparkFlex,
+            turnMotorInverted=ModuleConstants.backRight_turn_inverted,
+            driveMotorInverted=ModuleConstants.backRight_drive_inverted,
+            encoderInverted=ModuleConstants.backRight_encoder_inverted,
+            motorControllerType=SparkMax,
+
         )
 
         # The gyro sensor
@@ -86,8 +95,8 @@ class DriveSubsystem(Subsystem):
             (
                 self.frontLeft.getPosition(),
                 self.frontRight.getPosition(),
-                self.rearLeft.getPosition(),
-                self.rearRight.getPosition(),
+                self.backLeft.getPosition(),
+                self.backRight.getPosition(),
             ),
         )
         self.odometryHeadingOffset = Rotation2d(0)
@@ -109,8 +118,8 @@ class DriveSubsystem(Subsystem):
             (
                 self.frontLeft.getPosition(),
                 self.frontRight.getPosition(),
-                self.rearLeft.getPosition(),
-                self.rearRight.getPosition(),
+                self.backLeft.getPosition(),
+                self.backRight.getPosition(),
             ),
         )
         SmartDashboard.putNumber("x", pose.x)
@@ -144,8 +153,8 @@ class DriveSubsystem(Subsystem):
             (
                 self.frontLeft.getPosition(),
                 self.frontRight.getPosition(),
-                self.rearLeft.getPosition(),
-                self.rearRight.getPosition(),
+                self.backLeft.getPosition(),
+                self.backRight.getPosition(),
             ),
             pose,
         )
@@ -160,8 +169,8 @@ class DriveSubsystem(Subsystem):
             (
                 self.frontLeft.getPosition(),
                 self.frontRight.getPosition(),
-                self.rearLeft.getPosition(),
-                self.rearRight.getPosition(),
+                self.backLeft.getPosition(),
+                self.backRight.getPosition(),
             ),
             newPose,
         )
@@ -304,8 +313,8 @@ class DriveSubsystem(Subsystem):
         )
         self.frontLeft.setDesiredState(fl)
         self.frontRight.setDesiredState(fr)
-        self.rearLeft.setDesiredState(rl)
-        self.rearRight.setDesiredState(rr)
+        self.backLeft.setDesiredState(rl)
+        self.backRight.setDesiredState(rr)
 
     def setX(self) -> None:
         """Sets the wheels into an X formation to prevent movement."""
@@ -313,8 +322,8 @@ class DriveSubsystem(Subsystem):
         self.frontRight.setDesiredState(
             SwerveModuleState(0, Rotation2d.fromDegrees(-45))
         )
-        self.rearLeft.setDesiredState(SwerveModuleState(0, Rotation2d.fromDegrees(-45)))
-        self.rearRight.setDesiredState(SwerveModuleState(0, Rotation2d.fromDegrees(45)))
+        self.backLeft.setDesiredState(SwerveModuleState(0, Rotation2d.fromDegrees(-45)))
+        self.backRight.setDesiredState(SwerveModuleState(0, Rotation2d.fromDegrees(45)))
 
     def setModuleStates(
         self,
@@ -331,15 +340,15 @@ class DriveSubsystem(Subsystem):
         )
         self.frontLeft.setDesiredState(fl)
         self.frontRight.setDesiredState(fr)
-        self.rearLeft.setDesiredState(rl)
-        self.rearRight.setDesiredState(rr)
+        self.backLeft.setDesiredState(rl)
+        self.backRight.setDesiredState(rr)
 
     def resetEncoders(self) -> None:
         """Resets the drive encoders to currently read a position of 0."""
         self.frontLeft.resetEncoders()
-        self.rearLeft.resetEncoders()
+        self.backLeft.resetEncoders()
         self.frontRight.resetEncoders()
-        self.rearRight.resetEncoders()
+        self.backRight.resetEncoders()
 
     def getGyroHeading(self) -> Rotation2d:
         """Returns the heading of the robot, tries to be smart when gyro is disconnected
@@ -406,8 +415,8 @@ class BadSimPhysics(object):
             states = (
                 drivetrain.frontLeft.desiredState,
                 drivetrain.frontRight.desiredState,
-                drivetrain.rearLeft.desiredState,
-                drivetrain.rearRight.desiredState,
+                drivetrain.backLeft.desiredState,
+                drivetrain.backRight.desiredState,
             )
             speeds = DriveConstants.kDriveKinematics.toChassisSpeeds(states)
 

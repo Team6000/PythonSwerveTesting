@@ -5,21 +5,23 @@ from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
 from constants import ModuleConstants, getSwerveDrivingMotorConfig, getSwerveTurningMotorConfig
 
 
-class MAXSwerveModule:
+class SwerveModule:
     def __init__(
         self,
         drivingCANId: int,
         turningCANId: int,
-        chassisAngularOffset: float,
-        turnMotorInverted = True,
-        motorControllerType = SparkFlex,
+        chassisAngularOffset: float, # TODO: Don't understand
+        turnMotorInverted = False,
+        driveMotorInverted = False,
+        encoderInverted = False,
+        motorControllerType = SparkMax
     ) -> None:
-        """Constructs a MAXSwerveModule and configures the driving and turning motor,
+        """Constructs a SwerveModule and configures the driving and turning motor,
         encoder, and PID controller. This configuration is specific to the REV
         MAXSwerve Module built with NEOs, SPARKS MAX, and a Through Bore
         Encoder.
         """
-        self.chassisAngularOffset = 0
+        self.chassisAngularOffset = chassisAngularOffset
         self.desiredState = SwerveModuleState(0.0, Rotation2d())
 
         self.drivingSparkMax = motorControllerType(
@@ -32,23 +34,24 @@ class MAXSwerveModule:
         # Factory reset, so we get the SPARKS MAX to a known state before configuring
         # them. This is useful in case a SPARK MAX is swapped out.
         self.drivingSparkMax.configure(
-            getSwerveDrivingMotorConfig(),
+            getSwerveDrivingMotorConfig(driveMotorInverted),
             SparkBase.ResetMode.kResetSafeParameters,
             SparkBase.PersistMode.kPersistParameters)
 
         self.turningSparkMax.configure(
-            getSwerveTurningMotorConfig(turnMotorInverted),
+            getSwerveTurningMotorConfig(turnMotorInverted, encoderInverted),
             SparkBase.ResetMode.kResetSafeParameters,
             SparkBase.PersistMode.kPersistParameters)
 
         # Setup encoders and PID controllers for the driving and turning SPARKS MAX.
+
+        #TODO: Not sure if this is correct?
         self.drivingEncoder = self.drivingSparkMax.getEncoder()
         self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder()
 
         self.drivingPIDController = self.drivingSparkMax.getClosedLoopController()
         self.turningPIDController = self.turningSparkMax.getClosedLoopController()
 
-        self.chassisAngularOffset = chassisAngularOffset
         self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition())
         self.drivingEncoder.setPosition(0)
 
