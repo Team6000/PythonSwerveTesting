@@ -17,8 +17,9 @@ from wpilib import SmartDashboard, Field2d
 
 from constants import DriveConstants, ModuleConstants
 import swerveutils
+from subsystems.swervemodule_cancoder import SwerveModule_CANCoder
 from swervemodule import SwerveModule
-from rev import SparkMax, SparkFlex
+from rev import SparkMax
 import navx
 
 
@@ -32,14 +33,15 @@ class DriveSubsystem(Subsystem):
 
         enabledChassisAngularOffset = 0 if DriveConstants.kAssumeZeroOffsets else 1
 
-        # Create MAXSwerveModules
-        self.frontLeft = SwerveModule(
+        # Create 4 Swerve Modules
+        self.frontLeft = SwerveModule_CANCoder(
             DriveConstants.kFrontLeftDrivingCanId,
             DriveConstants.kFrontLeftTurningCanId,
             DriveConstants.kFrontLeftChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.frontLeft_turn_inverted,
-            driveMotorInverted= ModuleConstants.frontLeft_drive_inverted,
-            encoderInverted=ModuleConstants.frontLeft_encoder_inverted,
+            DriveConstants.kFrontLeftCANCoderID,
+            turnMotorInverted=ModuleConstants.kfrontLeft_turn_inverted,
+            driveMotorInverted= ModuleConstants.kfrontLeft_drive_inverted,
+            encoderInverted=ModuleConstants.kfrontLeft_encoder_inverted,
             motorControllerType=SparkMax,
         )
 
@@ -47,29 +49,29 @@ class DriveSubsystem(Subsystem):
             DriveConstants.kFrontRightDrivingCanId,
             DriveConstants.kFrontRightTurningCanId,
             DriveConstants.kFrontRightChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.frontRight_turn_inverted,
-            driveMotorInverted=ModuleConstants.frontRight_drive_inverted,
-            encoderInverted=ModuleConstants.frontRight_encoder_inverted,
+            turnMotorInverted=ModuleConstants.kfrontRight_turn_inverted,
+            driveMotorInverted=ModuleConstants.kfrontRight_drive_inverted,
+            encoderInverted=ModuleConstants.kfrontRight_encoder_inverted,
             motorControllerType=SparkMax,
         )
 
         self.backLeft = SwerveModule(
-            DriveConstants.kRearLeftDrivingCanId,
-            DriveConstants.kRearLeftTurningCanId,
+            DriveConstants.kBackLeftDrivingCanId,
+            DriveConstants.kBackLeftTurningCanId,
             DriveConstants.kBackLeftChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.backLeft_turn_inverted,
-            driveMotorInverted=ModuleConstants.backLeft_drive_inverted,
-            encoderInverted=ModuleConstants.backLeft_encoder_inverted,
+            turnMotorInverted=ModuleConstants.kbackLeft_turn_inverted,
+            driveMotorInverted=ModuleConstants.kbackLeft_drive_inverted,
+            encoderInverted=ModuleConstants.kbackLeft_encoder_inverted,
             motorControllerType=SparkMax,
         )
 
         self.backRight = SwerveModule(
-            DriveConstants.kRearRightDrivingCanId,
-            DriveConstants.kRearRightTurningCanId,
+            DriveConstants.kBackRightDrivingCanId,
+            DriveConstants.kBackRightTurningCanId,
             DriveConstants.kBackRightChassisAngularOffset * enabledChassisAngularOffset,
-            turnMotorInverted=ModuleConstants.backRight_turn_inverted,
-            driveMotorInverted=ModuleConstants.backRight_drive_inverted,
-            encoderInverted=ModuleConstants.backRight_encoder_inverted,
+            turnMotorInverted=ModuleConstants.kbackRight_turn_inverted,
+            driveMotorInverted=ModuleConstants.kbackRight_drive_inverted,
+            encoderInverted=ModuleConstants.kbackRight_encoder_inverted,
             motorControllerType=SparkMax,
 
         )

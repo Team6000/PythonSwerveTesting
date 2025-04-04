@@ -10,12 +10,11 @@ numerical or boolean constants. Don't use this for any other purpose!
 
 import math
 
-import rev
+#import rev
 from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfileRadians
-from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 
 
@@ -57,15 +56,24 @@ class DriveConstants:
     kBackRightChassisAngularOffset = math.pi / 2
 
     # SPARK MAX CAN IDs
-    kFrontLeftDrivingCanId = 1
-    kRearLeftDrivingCanId = 2
-    kFrontRightDrivingCanId = 3
-    kRearRightDrivingCanId = 4
+    kFrontLeftDrivingCanId = 11
+    kFrontLeftTurningCanId = 12
+    kFrontLeftCANCoderID = 13
 
-    kFrontLeftTurningCanId = 5
-    kRearLeftTurningCanId = 6
-    kFrontRightTurningCanId = 7
-    kRearRightTurningCanId = 8
+    kFrontRightDrivingCanId = 21
+    kFrontRightTurningCanId = 22
+    kFrontRightCANCoderID = None
+
+    kBackLeftDrivingCanId = 31
+    kBackLeftTurningCanId = 32
+    kBackLeftCANCoderID = None
+
+    kBackRightDrivingCanId = 41
+    kBackRightTurningCanId = 42
+    kBackRightCANCoderID = None
+
+
+
 
     kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving)
 
@@ -103,21 +111,20 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool) 
 
 class ModuleConstants:
 
-    frontLeft_drive_inverted = False
-    frontLeft_turn_inverted = False
-    frontRight_drive_inverted = False
-    frontRight_turn_inverted = False
-    backLeft_drive_inverted = False
-    backLeft_turn_inverted = False
-    backRight_drive_inverted = False
-    backRight_turn_inverted = False
+    kfrontLeft_drive_inverted = False
+    kfrontLeft_turn_inverted = False
+    kfrontRight_drive_inverted = False
+    kfrontRight_turn_inverted = False
+    kbackLeft_drive_inverted = False
+    kbackLeft_turn_inverted = False
+    kbackRight_drive_inverted = False
+    kbackRight_turn_inverted = False
 
 
-
-    frontLeft_encoder_inverted = False
-    frontRight_encoder_inverted = False
-    backLeft_encoder_inverted = False
-    backRight_encoder_inverted = False
+    kfrontLeft_encoder_inverted = False
+    kfrontRight_encoder_inverted = False
+    kbackLeft_encoder_inverted = False
+    kbackRight_encoder_inverted = False
 
 
     # The MAXSwerve module can be configured with one of three pinion gears: 12T, 13T, or 14T.
