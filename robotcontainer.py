@@ -3,12 +3,9 @@ from __future__ import annotations
 import commands2
 import typing
 
-from commands2 import cmd, RunCommand
+from commands2 import RunCommand
 from commands2.button import CommandGenericHID
 from wpilib import XboxController
-from wpimath.controller import PIDController, ProfiledPIDControllerRadians, HolonomicDriveController
-from wpimath.geometry import Pose2d, Rotation2d, Translation2d
-from wpimath.trajectory import TrajectoryConfig, TrajectoryGenerator
 
 from constants import AutoConstants, DriveConstants, OIConstants
 from subsystems.drivesubsystem import DriveSubsystem
