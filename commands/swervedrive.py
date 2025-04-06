@@ -2,7 +2,7 @@ from __future__ import annotations
 from wpimath import applyDeadband
 import commands2
 
-class HolonomicDrive(commands2.Command):
+class SwerveDrive(commands2.Command):
     """
     "holonomic" means that it can rotate independently of driving forward or left
     (examples: mecanum drivetrain, ball drivetrain, swerve drivetrain)
