@@ -1,8 +1,6 @@
 from __future__ import annotations
-import math
 
 import commands2
-import wpilib
 import typing
 
 from commands2 import cmd, RunCommand
@@ -16,6 +14,7 @@ from constants import AutoConstants, DriveConstants, OIConstants
 from subsystems.drivesubsystem import DriveSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
+from pathplannerlib.auto import AutoBuilder
 
 class RobotContainer:
     """
@@ -35,7 +34,7 @@ class RobotContainer:
 
         # Configure the button bindings and autos
         self.configureButtonBindings()
-        self.configureAutos()
+        self.autoChooser = AutoBuilder.buildAutoChooser()
 
         # Configure default command for driving using sticks
         from commands.swervedrive import SwerveDrive
@@ -74,69 +73,9 @@ class RobotContainer:
         """
         :returns: the command to run in autonomous
         """
-        command = self.chosenAuto.getSelected()
-        return command()
-
-    def configureAutos(self): # TODO: CHANGE TO PathPlanner
-        self.chosenAuto = wpilib.SendableChooser()
-        # you can also set the default option, if needed
-        self.chosenAuto.setDefaultOption("trajectory example", self.getAutonomousTrajectoryExample)
-        wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
+        return self.autoChooser.getSelected()
 
 
-    def getAutonomousTrajectoryExample(self) -> commands2.Command:
-        # Create config for trajectory
-        config = TrajectoryConfig(
-            AutoConstants.kMaxSpeedMetersPerSecond,
-            AutoConstants.kMaxAccelerationMetersPerSecondSquared,
-        )
-        # Add kinematics to ensure max speed is actually obeyed
-        config.setKinematics(DriveConstants.kDriveKinematics)
-
-        # An example trajectory to follow. All units in meters.
-        exampleTrajectory = TrajectoryGenerator.generateTrajectory(
-            # Start at the origin facing the +X direction
-            Pose2d(0, 0, Rotation2d(0)),
-            # Pass through these two interior waypoints, making an 's' curve path
-            [Translation2d(0.5, 0.5), Translation2d(1, -0.5)],
-            # End 1.5 meters straight ahead of where we started, facing forward
-            Pose2d(1.5, 0, Rotation2d(0)),
-            config,
-        )
-
-        thetaController = ProfiledPIDControllerRadians(
-            AutoConstants.kPThetaController,
-            0,
-            0,
-            AutoConstants.kThetaControllerConstraints,
-        )
-        thetaController.enableContinuousInput(-math.pi, math.pi)
-
-        driveController = HolonomicDriveController(
-            PIDController(AutoConstants.kPXController, 0, 0),
-            PIDController(AutoConstants.kPXController, 0, 0),
-            thetaController,
-        )
-
-        swerveControllerCommand = commands2.SwerveControllerCommand(
-            exampleTrajectory,
-            self.robotDrive.getPose,  # Functional interface to feed supplier
-            DriveConstants.kDriveKinematics,
-            driveController,
-            self.robotDrive.setModuleStates,
-            (self.robotDrive,),
-        )
-
-        # Reset odometry to the starting pose of the trajectory.
-        self.robotDrive.resetOdometry(exampleTrajectory.initialPose())
-
-        # Run path following command, then stop at the end.
-        return swerveControllerCommand.andThen(
-            cmd.run(
-                lambda: self.robotDrive.drive(0, 0, 0, False, False),
-                self.robotDrive,
-            )
-        )
 
     def getTestCommand(self) -> typing.Optional[commands2.Command]:
         """
