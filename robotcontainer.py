@@ -7,7 +7,7 @@ from commands2 import RunCommand
 from commands2.button import CommandGenericHID
 from wpilib import XboxController
 
-from constants import AutoConstants, DriveConstants, OIConstants
+from constants import OIConstants
 from subsystems.drivesubsystem import DriveSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront

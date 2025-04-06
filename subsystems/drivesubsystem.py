@@ -107,7 +107,7 @@ class DriveSubsystem(Subsystem):
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
 
-        # Pathplanner Setup:
+        # PathPlanner Setup:
         config = RobotConfig.fromGUISettings()
 
         AutoBuilder.configure(
@@ -117,7 +117,7 @@ class DriveSubsystem(Subsystem):
             lambda speeds, feedforwards: self.driveRobotRelative(speeds),
             # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
             PPHolonomicDriveController(
-                # PPHolonomicController is the built in path following controller for holonomic drive trains
+                # PPHolonomicController is the built-in path following controller for holonomic drive trains
                 PIDConstants(5.0, 0.0, 0.0),  # Translation PID constants
                 PIDConstants(5.0, 0.0, 0.0)  # Rotation PID constants
             ),
