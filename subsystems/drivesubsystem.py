@@ -144,6 +144,14 @@ class DriveSubsystem(Subsystem):
         SmartDashboard.putNumber("x", pose.x)
         SmartDashboard.putNumber("y", pose.y)
         SmartDashboard.putNumber("heading", pose.rotation().degrees())
+
+        # Put the encoders  of all four modules
+        SmartDashboard.putNumber("fl", self.frontLeft.turningEncoder.getPosition() - self.frontLeft.moduleRotationOffset)
+        SmartDashboard.putNumber("fr", self.frontRight.turningEncoder.getPosition() - self.frontRight.moduleRotationOffset)
+        SmartDashboard.putNumber("bl", self.backLeft.turningEncoder.getPosition() - self.backLeft.moduleRotationOffset)
+        SmartDashboard.putNumber("br", self.backRight.turningEncoder.getPosition() - self.backRight.moduleRotationOffset)
+
+
         self.field.setRobotPose(pose)
 
     def getPoseHeading(self) -> Rotation2d:
