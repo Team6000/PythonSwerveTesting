@@ -11,13 +11,16 @@ from wpimath.kinematics import (
     SwerveDrive4Kinematics,
     SwerveDrive4Odometry,
 )
-from wpilib import SmartDashboard, Field2d
+from wpilib import SmartDashboard, Field2d, DriverStation
 from constants import DriveConstants, ModuleConstants
 import swerveutils
 from subsystems.swervemodule_cancoder import SwerveModule_CANCoder
 from swervemodule import SwerveModule
 from rev import SparkMax
 import navx
+from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.controller import PPHolonomicDriveController
+from pathplannerlib.config import RobotConfig, PIDConstants
 
 
 class DriveSubsystem(Subsystem):
@@ -103,6 +106,25 @@ class DriveSubsystem(Subsystem):
 
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
+
+        # Pathplanner Setup:
+        config = RobotConfig.fromGUISettings()
+
+        AutoBuilder.configure(
+            self.getPose,  # Robot pose supplier
+            self.resetOdometry,  # Method to reset odometry (will be called if your auto has a starting pose)
+            self.getRobotRelativeSpeeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            lambda speeds, feedforwards: self.driveRobotRelative(speeds),
+            # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+            PPHolonomicDriveController(
+                # PPHolonomicController is the built in path following controller for holonomic drive trains
+                PIDConstants(5.0, 0.0, 0.0),  # Translation PID constants
+                PIDConstants(5.0, 0.0, 0.0)  # Rotation PID constants
+            ),
+            config,  # The robot configuration
+            self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
+            self  # Reference to this subsystem to set requirements
+        )
 
 
 
@@ -372,3 +394,47 @@ class DriveSubsystem(Subsystem):
         """
         return self.getTurnRate() * 180 / math.pi
 
+    def getRobotRelativeSpeeds(self) -> ChassisSpeeds:
+        """Returns the current robot-relative chassis speeds.
+
+        This method uses the current wheel speeds and the robot's heading to calculate
+        the robot-relative chassis speeds.
+
+        :returns: The current robot-relative chassis speeds.
+        """
+        # Get the current states of the swerve modules
+        fl_state = self.frontLeft.getState()
+        fr_state = self.frontRight.getState()
+        rl_state = self.backLeft.getState()
+        rr_state = self.backRight.getState()
+
+        # Convert the swerve module states into chassis speeds (robot-relative)
+        # Use SwerveDrive4Kinematics to calculate the ChassisSpeeds
+        chassis_speeds = DriveConstants.kDriveKinematics.toChassisSpeeds(
+            fl_state, fr_state, rl_state, rr_state
+        )
+
+        return chassis_speeds
+
+    def driveRobotRelative(self, chassis_speeds: ChassisSpeeds):
+        """Outputs commands to the robot's drive motors given robot-relative chassis speeds.
+
+        This function uses the robot-relative chassis speeds and converts them into individual
+        swerve module states using the kDriveKinematics.
+
+        :param chassis_speeds: The robot-relative chassis speeds (vx, vy, omega)
+        """
+        # Use kDriveKinematics to convert ChassisSpeeds to individual module states
+        module_states = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassis_speeds)
+
+        # Apply module states to the swerve modules
+        self.frontLeft.setDesiredState(module_states[0])
+        self.frontRight.setDesiredState(module_states[1])
+        self.backLeft.setDesiredState(module_states[2])
+        self.backRight.setDesiredState(module_states[3])
+
+    def shouldFlipPath(self):
+        # Boolean supplier that controls when the path will be mirrored for the red alliance
+        # This will flip the path being followed to the red side of the field.
+        # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
