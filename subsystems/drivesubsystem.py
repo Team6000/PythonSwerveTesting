@@ -1,6 +1,5 @@
 import math
 import typing
-
 import wpilib
 
 from commands2 import Subsystem
@@ -13,8 +12,6 @@ from wpimath.kinematics import (
     SwerveDrive4Odometry,
 )
 from wpilib import SmartDashboard, Field2d
-
-
 from constants import DriveConstants, ModuleConstants
 import swerveutils
 from subsystems.swervemodule_cancoder import SwerveModule_CANCoder
@@ -26,6 +23,8 @@ import navx
 class DriveSubsystem(Subsystem):
     def __init__(self, maxSpeedScaleFactor=None) -> None:
         super().__init__()
+
+        # Makes sure that if a maxSpeedScaleFactor is given it is a function
         if maxSpeedScaleFactor is not None:
             assert callable(maxSpeedScaleFactor)
 
@@ -105,14 +104,11 @@ class DriveSubsystem(Subsystem):
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
 
-        self.simPhysics = None
 
 
     def periodic(self) -> None:
-        if self.simPhysics is not None:
-            self.simPhysics.periodic()
 
-        # Update the odometry in the periodic block
+        # Update the odometry of the robot
         pose = self.odometry.update(
             self.getGyroHeading(),
             (
@@ -122,12 +118,13 @@ class DriveSubsystem(Subsystem):
                 self.backRight.getPosition(),
             ),
         )
+        # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
         SmartDashboard.putNumber("y", pose.y)
         SmartDashboard.putNumber("heading", pose.rotation().degrees())
         self.field.setRobotPose(pose)
 
-    def getHeading(self) -> Rotation2d:
+    def getPoseHeading(self) -> Rotation2d:
         return self.getPose().rotation()
 
     def getPose(self) -> Pose2d:
@@ -177,22 +174,8 @@ class DriveSubsystem(Subsystem):
         self.odometryHeadingOffset += dRot
 
     def stop(self):
-        self.arcadeDrive(0, 0)
+        self.drive(0, 0, 0, False, False)
 
-    def arcadeDrive(
-        self,
-        xSpeed: float,
-        rot: float,
-        assumeManualInput: bool = False,
-    ) -> None:
-        self.drive(xSpeed, 0, rot, False, False, square=assumeManualInput)
-
-    def rotate(self, rotSpeed) -> None:
-        """
-        Rotate the robot in place, without moving laterally (for example, for aiming)
-        :param rotSpeed: rotation speed
-        """
-        self.arcadeDrive(0, rotSpeed)
 
     def drive(
         self,
@@ -389,44 +372,3 @@ class DriveSubsystem(Subsystem):
         """
         return self.getTurnRate() * 180 / math.pi
 
-
-class BadSimPhysics(object):
-    """
-    this is the wrong way to do it, it does not scale!!!
-    the right way is shown here: https://github.com/robotpy/examples/blob/main/Physics/src/physics.py
-    and documented here: https://robotpy.readthedocs.io/projects/pyfrc/en/stable/physics.html
-    (but for a swerve drive it will take some work to add correctly)
-    """
-    def __init__(self, drivetrain: DriveSubsystem, robot: wpilib.RobotBase):
-        self.drivetrain = drivetrain
-        self.robot = robot
-        self.t = 0
-
-    def periodic(self):
-        past = self.t
-        self.t = wpilib.Timer.getFPGATimestamp()
-        if past == 0:
-            return  # it was first time
-
-        dt = self.t - past
-        if self.robot.isEnabled():
-            drivetrain = self.drivetrain
-
-            states = (
-                drivetrain.frontLeft.desiredState,
-                drivetrain.frontRight.desiredState,
-                drivetrain.backLeft.desiredState,
-                drivetrain.backRight.desiredState,
-            )
-            speeds = DriveConstants.kDriveKinematics.toChassisSpeeds(states)
-
-            dx = speeds.vx * dt
-            dy = speeds.vy * dt
-
-            heading = drivetrain.getHeading()
-            trans = Translation2d(dx, dy).rotateBy(heading)
-            rot = (speeds.omega * 180 / math.pi) * dt
-
-            g = drivetrain.gyro
-            g.setAngleAdjustment(g.getAngleAdjustment() + rot * DriveConstants.kGyroReversed)
-            drivetrain.adjustOdometry(trans, Rotation2d())

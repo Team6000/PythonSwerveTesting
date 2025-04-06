@@ -2,11 +2,10 @@ from __future__ import annotations
 import math
 
 import commands2
-import wpimath
 import wpilib
 import typing
 
-from commands2 import cmd, InstantCommand, RunCommand
+from commands2 import cmd, RunCommand
 from commands2.button import CommandGenericHID
 from wpilib import XboxController
 from wpimath.controller import PIDController, ProfiledPIDControllerRadians, HolonomicDriveController
@@ -14,7 +13,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.trajectory import TrajectoryConfig, TrajectoryGenerator
 
 from constants import AutoConstants, DriveConstants, OIConstants
-from subsystems.drivesubsystem import DriveSubsystem, BadSimPhysics
+from subsystems.drivesubsystem import DriveSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
 
@@ -29,8 +28,7 @@ class RobotContainer:
     def __init__(self, robot) -> None:
         # The robot's subsystems
         self.robotDrive = DriveSubsystem()
-        if commands2.TimedCommandRobot.isSimulation():
-            self.robotDrive.simPhysics = BadSimPhysics(self.robotDrive, robot)
+
 
         # The driver's controller
         self.driverController = CommandGenericHID(OIConstants.kDriverControllerPort)
@@ -40,9 +38,9 @@ class RobotContainer:
         self.configureAutos()
 
         # Configure default command for driving using sticks
-        from commands.holonomicdrive import HolonomicDrive
+        from commands.swervedrive import SwerveDrive
         self.robotDrive.setDefaultCommand(
-            HolonomicDrive(
+            SwerveDrive(
                 self.robotDrive,
                 forwardSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftY),
                 leftSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftX),
@@ -83,25 +81,8 @@ class RobotContainer:
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
         self.chosenAuto.setDefaultOption("trajectory example", self.getAutonomousTrajectoryExample)
-        self.chosenAuto.addOption("left blue", self.getAutonomousLeftBlue)
-        self.chosenAuto.addOption("left red", self.getAutonomousLeftRed)
         wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
 
-    def getAutonomousLeftBlue(self):
-        setStartPose = ResetXY(x=0.783, y=6.686, headingDegrees=+60, drivetrain=self.robotDrive)
-        driveForward = commands2.RunCommand(lambda: self.robotDrive.arcadeDrive(xSpeed=1.0, rot=0.0), self.robotDrive)
-        stop = commands2.InstantCommand(lambda: self.robotDrive.arcadeDrive(0, 0))
-
-        command = setStartPose.andThen(driveForward.withTimeout(1.0)).andThen(stop)
-        return command
-
-    def getAutonomousLeftRed(self):
-        setStartPose = ResetXY(x=15.777, y=4.431, headingDegrees=-120, drivetrain=self.robotDrive)
-        driveForward = commands2.RunCommand(lambda: self.robotDrive.arcadeDrive(xSpeed=1.0, rot=0.0), self.robotDrive)
-        stop = commands2.InstantCommand(lambda: self.robotDrive.arcadeDrive(0, 0))
-
-        command = setStartPose.andThen(driveForward.withTimeout(2.0)).andThen(stop)
-        return command
 
     def getAutonomousTrajectoryExample(self) -> commands2.Command:
         # Create config for trajectory

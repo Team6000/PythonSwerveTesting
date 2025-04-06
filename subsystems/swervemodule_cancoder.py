@@ -1,3 +1,5 @@
+import math
+
 from wpimath.geometry import Rotation2d
 
 from swervemodule import SwerveModule
@@ -10,7 +12,7 @@ class SwerveModule_CANCoder(SwerveModule):
             drivingCANId: int,
             turningCANId: int,
             moduleRotationOffset: float,
-            cancoder_id: int,
+            canCoder_id: int,
             turnMotorInverted=False,
             driveMotorInverted=False,
             encoderInverted=False,
@@ -19,12 +21,15 @@ class SwerveModule_CANCoder(SwerveModule):
         super().__init__(drivingCANId, turningCANId, moduleRotationOffset, turnMotorInverted, driveMotorInverted, encoderInverted, motorControllerType)
 
         # Gets CANCoder Abs Encoder Position
-        self.cancoder_id = cancoder_id
-        self.turning_AbsEncoder = CANcoder(cancoder_id)
+        self.canCoder_id = canCoder_id
+        self.turning_AbsEncoder = CANcoder(canCoder_id)
 
         # Sets the position of the relative encoder to the abs encoder
         self.turningEncoder = self.turningSparkMax.getEncoder()
-        self.turningEncoder.setPosition(self.turning_AbsEncoder.get_absolute_position())
+
+        rotation_value = self.turning_AbsEncoder.get_absolute_position().value
+        rad_value = rotation_value * math.tau
+        self.turningEncoder.setPosition(rad_value)
 
         # Uses the new encoder position to write the initial desired state to the current angle
         self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition())

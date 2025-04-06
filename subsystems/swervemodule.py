@@ -1,4 +1,4 @@
-from rev import SparkMax, SparkFlex, SparkLowLevel, SparkAbsoluteEncoder, SparkBase
+from rev import SparkMax, SparkLowLevel, SparkBase
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
 import math
@@ -47,12 +47,12 @@ class SwerveModule:
         # Setup encoders and PID controllers for the driving and turning SPARKS MAX.
 
         self.drivingEncoder = self.drivingSparkMax.getEncoder()
-        self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder() # Would this get the Redux
+        self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder() # TODO: Would this get the Redux
 
         self.drivingPIDController = self.drivingSparkMax.getClosedLoopController()
         self.turningPIDController = self.turningSparkMax.getClosedLoopController()
 
-        self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition())
+        self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition() - self.moduleRotationOffset)
         self.drivingEncoder.setPosition(0)
 
     def getState(self) -> SwerveModuleState:
@@ -88,6 +88,7 @@ class SwerveModule:
         if abs(desiredState.speed) < ModuleConstants.kDrivingMinSpeedMetersPerSecond:
             # if WPILib doesn't want us to move at all, don't bother to bring the wheels back to zero angle yet
             # (causes brownout protection when battery is lower: https://youtu.be/0Xi9yb1IMyA)
+            # TODO: WHY, WATCH VIDEO
             inXBrake = abs(abs(desiredState.angle.degrees()) - 45) < 0.01
             if not inXBrake:
                 self.stop()
@@ -96,9 +97,7 @@ class SwerveModule:
         # Apply chassis angular offset to the desired state.
         correctedDesiredState = SwerveModuleState()
         correctedDesiredState.speed = desiredState.speed
-        correctedDesiredState.angle = desiredState.angle + Rotation2d(
-            self.moduleRotationOffset
-        )
+        correctedDesiredState.angle = desiredState.angle + Rotation2d(self.moduleRotationOffset)
 
         # Optimize the reference state to avoid spinning further than 90 degrees.
         optimizedDesiredState = correctedDesiredState
@@ -127,7 +126,7 @@ class SwerveModule:
 
     def resetEncoders(self) -> None:
         """
-        Zeroes all the SwerveModule encoders.
+        Zeroes the SwerveModule encoders.
         """
         self.drivingEncoder.setPosition(0)
 
