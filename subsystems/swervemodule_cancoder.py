@@ -32,4 +32,4 @@ class SwerveModule_CANCoder(SwerveModule):
         self.turningEncoder.setPosition(rad_value)
 
         # Uses the new encoder position to write the initial desired state to the current angle
-        self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition())
+        self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition() - self.moduleRotationOffset)
