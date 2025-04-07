@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/CommandRevSwerve.iml" filepath="$PROJECT_DIR$/.idea/CommandRevSwerve.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SwerveTesting.iml" filepath="$PROJECT_DIR$/.idea/SwerveTesting.iml" />
     </modules>
   </component>
 </project>
