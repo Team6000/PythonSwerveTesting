@@ -15,7 +15,7 @@ from wpilib import SmartDashboard, Field2d, DriverStation
 from constants import DriveConstants, ModuleConstants
 import swerveutils
 from subsystems.swervemodule_cancoder import SwerveModule_CANCoder
-from swervemodule import SwerveModule
+from subsystems.swervemodule import SwerveModule
 from rev import SparkMax
 import navx
 from pathplannerlib.auto import AutoBuilder

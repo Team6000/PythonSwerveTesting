@@ -2,7 +2,7 @@ import math
 
 from wpimath.geometry import Rotation2d
 
-from swervemodule import SwerveModule
+from subsystems.swervemodule import SwerveModule
 from rev import SparkMax
 from phoenix6.hardware import CANcoder
 
