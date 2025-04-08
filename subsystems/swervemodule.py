@@ -94,7 +94,7 @@ class SwerveModule:
                 self.stop()
                 return
 
-        # Apply chassis angular offset to the desired state.
+        # Apply offset to the desired state.
         correctedDesiredState = SwerveModuleState()
         correctedDesiredState.speed = desiredState.speed
         correctedDesiredState.angle = desiredState.angle + Rotation2d(self.moduleRotationOffset)
