@@ -102,6 +102,8 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool) 
     turningConfig.absoluteEncoder.positionConversionFactor(ModuleConstants.kTurningEncoderPositionFactor)
     turningConfig.absoluteEncoder.velocityConversionFactor(ModuleConstants.kTurningEncoderVelocityFactor)
     turningConfig.absoluteEncoder.inverted(encoderInverted)
+    turningConfig.encoder.positionConversionFactor(ModuleConstants.kTurningAbsEncoderPositionFactor)
+    turningConfig.encoder.velocityConversionFactor(ModuleConstants.kTurningAbsEncoderVelocityFactor)
     turningConfig.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
     turningConfig.closedLoop.pid(ModuleConstants.kTurningP, ModuleConstants.kTurningI, ModuleConstants.kTurningD)
     turningConfig.closedLoop.velocityFF(ModuleConstants.kTurningFF)
@@ -128,7 +130,7 @@ class ModuleConstants:
     kbackLeft_encoder_inverted = False
     kbackRight_encoder_inverted = False
 
-
+    #TODO: Change all of these types of things so the pose is correct
     # The MAXSwerve module can be configured with one of three pinion gears: 12T, 13T, or 14T.
     # This changes the drive speed of the module (a pinion gear with more teeth will result in a
     # robot that drives faster).
@@ -153,6 +155,10 @@ class ModuleConstants:
 
     kTurningEncoderPositionFactor = math.tau  # radian
     kTurningEncoderVelocityFactor = math.tau / 60.0  # radians per second
+
+    kTurningMotorGearReduction = (14.0 / 50) * (10.0 / 60.0)
+    kTurningAbsEncoderPositionFactor = math.tau * kTurningMotorGearReduction # Converts to Radians
+    kTurningAbsEncoderVelocityFactor = (math.tau * kTurningMotorGearReduction) / 60.0  # radians per second #TODO:
 
     kTurningEncoderPositionPIDMinInput = 0  # radian
     kTurningEncoderPositionPIDMaxInput = kTurningEncoderPositionFactor  # radian
