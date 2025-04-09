@@ -24,7 +24,6 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 
-# TODO: CHECK FIELD ORIENTATION
 
 class DriveSubsystem(Subsystem):
     def __init__(self, maxSpeedScaleFactor=None) -> None:
@@ -145,17 +144,19 @@ class DriveSubsystem(Subsystem):
         )
         # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
-        SmartDashboard.putNumber("y", pose.y)
+        SmartDashboard.putNumber("y", -pose.y)
         SmartDashboard.putNumber("pose heading", pose.rotation().degrees())
         SmartDashboard.putNumber("gyro heading", self.getGyroHeading().degrees())
 
         # Put the encoders  of all four modules
-        SmartDashboard.putNumber("fl", ((self.frontLeft.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kFrontLeftRotationOffset))
-        SmartDashboard.putNumber("fr", ((self.frontRight.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kFrontRightRotationOffset))
-        SmartDashboard.putNumber("bl", ((self.backLeft.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kBackLeftRotationOffset))
-        SmartDashboard.putNumber("br", ((self.backRight.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kBackRightRotationOffset))
+        SmartDashboard.putNumber("fl", (self.frontLeft.turningEncoder.getPosition() * 180 / math.pi))
+        SmartDashboard.putNumber("fr", (self.frontRight.turningEncoder.getPosition() * 180 / math.pi))
+        SmartDashboard.putNumber("bl", (self.backLeft.turningEncoder.getPosition() * 180 / math.pi))
+        SmartDashboard.putNumber("br", (self.backRight.turningEncoder.getPosition() * 180 / math.pi))
 
-        self.field.setRobotPose(pose)
+        new_pose = Pose2d(pose.x,-pose.y,pose.rotation()) # TODO: Test and find reason for
+
+        self.field.setRobotPose(new_pose)
 
     def getPoseHeading(self) -> Rotation2d:
         return self.getPose().rotation()
@@ -166,8 +167,9 @@ class DriveSubsystem(Subsystem):
         :returns: The pose.
         """
         # TODO: TEST IF THIS WORKS AND IF IT NEEDS TO BE REVERSED
-        pose = self.odometry.getPose()
-        pose.y = -pose.y
+        og_pose = self.odometry.getPose()
+        pose = Pose2d(og_pose.x,-og_pose.y,og_pose.rotation())
+
         return pose
 
     def resetOdometry(self, pose: Pose2d) -> None:

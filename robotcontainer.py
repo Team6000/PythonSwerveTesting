@@ -3,6 +3,7 @@ from __future__ import annotations
 import commands2
 import typing
 
+from wpimath.geometry import Pose2d
 from commands2 import RunCommand
 from commands2.button import CommandGenericHID
 from wpilib import XboxController, SmartDashboard
@@ -58,13 +59,15 @@ class RobotContainer:
         """
 
         xButton = self.driverController.button(XboxController.Button.kX)
-        xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive))
+        xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive)) #TODO: DOESN'T WORK
 
         yButton = self.driverController.button(XboxController.Button.kY)
         yButton.onTrue(ResetSwerveFront(self.robotDrive))
 
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
+
+
 
     def disablePIDSubsystems(self) -> None:
         """Disables all ProfiledPIDSubsystem and PIDSubsystem instances.

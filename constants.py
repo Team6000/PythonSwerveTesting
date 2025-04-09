@@ -57,7 +57,7 @@ class DriveConstants:
     kFrontLeftDrivingCanId = 11
     kFrontLeftTurningCanId = 12
     kFrontLeftCANCoderID = 13
-    kFrontLeftRotationOffset = 0 #155 #TODO: DO THIS!!!
+    kFrontLeftRotationOffset = 20
 
     kFrontRightDrivingCanId = 21
     kFrontRightTurningCanId = 22
@@ -77,7 +77,7 @@ class DriveConstants:
 
 
 
-    kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving) #TODO CHECK
+    kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving)
 
 
 def getSwerveDrivingMotorConfig(drivingMotorInverted: bool) -> SparkBaseConfig:
