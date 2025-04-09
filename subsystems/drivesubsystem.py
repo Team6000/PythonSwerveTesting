@@ -120,8 +120,8 @@ class DriveSubsystem(Subsystem):
             # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
             PPHolonomicDriveController(
                 # PPHolonomicController is the built-in path following controller for holonomic drive trains
-                PIDConstants(5.0, 0.0, 0.0),  # Translation PID constants
-                PIDConstants(5.0, 0.0, 0.0)  # Rotation PID constants
+                PIDConstants(0.01, 0.0, 0.0),  # Translation PID constants
+                PIDConstants(0.01, 0.0, 0.0)  # Rotation PID constants
             ),
             config,  # The robot configuration
             self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
@@ -419,17 +419,12 @@ class DriveSubsystem(Subsystem):
         :returns: The current robot-relative chassis speeds.
         """
         # Get the current states of the swerve modules
-        fl_state = self.frontLeft.getState()
-        fr_state = self.frontRight.getState()
-        rl_state = self.backLeft.getState()
-        rr_state = self.backRight.getState()
+        fl = self.frontLeft.getState()
+        fr = self.frontRight.getState()
+        rl = self.backLeft.getState()
+        rr = self.backRight.getState()
 
-        # Convert the swerve module states into chassis speeds (robot-relative)
-        # Use SwerveDrive4Kinematics to calculate the ChassisSpeeds
-        chassis_speeds = DriveConstants.kDriveKinematics.toChassisSpeeds(
-            fl_state, fr_state, rl_state, rr_state
-        )
-
+        chassis_speeds = DriveConstants.kDriveKinematics.toChassisSpeeds([fl,fr,rl,rr])
         return chassis_speeds
 
     def driveRobotRelative(self, chassis_speeds: ChassisSpeeds):
