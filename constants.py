@@ -62,17 +62,17 @@ class DriveConstants:
     kFrontRightDrivingCanId = 21
     kFrontRightTurningCanId = 22
     kFrontRightCANCoderID = None
-    kFrontRightRotationOffset = None
+    kFrontRightRotationOffset = 0
 
     kBackLeftDrivingCanId = 31
     kBackLeftTurningCanId = 32
     kBackLeftCANCoderID = None
-    kBackLeftRotationOffset = None
+    kBackLeftRotationOffset = 0
 
     kBackRightDrivingCanId = 41
     kBackRightTurningCanId = 42
     kBackRightCANCoderID = None
-    kBackRightRotationOffset = None
+    kBackRightRotationOffset = 0
 
 
 
