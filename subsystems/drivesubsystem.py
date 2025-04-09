@@ -383,7 +383,7 @@ class DriveSubsystem(Subsystem):
         else:
             if self.gyro.isCalibrating():
                 state = "calibrating"
-            self._lastGyroAngle = self.gyro.getAngle() # TODO: WONT BE YAW AS VERTICAL
+            self._lastGyroAngle = self.gyro.getAngle()
             self._lastGyroAngleTime = now
 
         if state != self._lastGyroState:

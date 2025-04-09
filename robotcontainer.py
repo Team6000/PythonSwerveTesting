@@ -5,7 +5,7 @@ import typing
 
 from commands2 import RunCommand
 from commands2.button import CommandGenericHID
-from wpilib import XboxController
+from wpilib import XboxController, SmartDashboard
 
 from constants import OIConstants
 from subsystems.drivesubsystem import DriveSubsystem
@@ -32,6 +32,8 @@ class RobotContainer:
         # Configure the button bindings and autos
         self.configureButtonBindings()
         self.autoChooser = AutoBuilder.buildAutoChooser()
+
+        SmartDashboard.putData("Auto Chooser", self.autoChooser)
 
         # Configure default command for driving using sticks
         from commands.swervedrive import SwerveDrive
