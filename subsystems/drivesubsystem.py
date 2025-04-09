@@ -146,7 +146,8 @@ class DriveSubsystem(Subsystem):
         # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
         SmartDashboard.putNumber("y", pose.y)
-        SmartDashboard.putNumber("heading", pose.rotation().degrees())
+        SmartDashboard.putNumber("pose heading", pose.rotation().degrees())
+        SmartDashboard.putNumber("gyro heading", self.getGyroHeading().degrees())
 
         # Put the encoders  of all four modules
         SmartDashboard.putNumber("fl", ((self.frontLeft.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kFrontLeftRotationOffset))
