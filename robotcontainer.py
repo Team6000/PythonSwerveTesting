@@ -31,7 +31,7 @@ class RobotContainer:
 
         # Configure the button bindings and autos
         self.configureButtonBindings()
-        # self.autoChooser = AutoBuilder.buildAutoChooser()
+        self.autoChooser = AutoBuilder.buildAutoChooser()
 
         # Configure default command for driving using sticks
         from commands.swervedrive import SwerveDrive
@@ -72,8 +72,7 @@ class RobotContainer:
         """
         :returns: the command to run in autonomous
         # """
-        # return self.autoChooser.getSelected()
-        return None
+        return self.autoChooser.getSelected()
 
 
 
