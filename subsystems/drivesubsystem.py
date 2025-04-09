@@ -24,7 +24,7 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 
-#TODO: Y WAS REVERSE IN POSE
+# TODO: CHECK FIELD ORIENTATION
 
 class DriveSubsystem(Subsystem):
     def __init__(self, maxSpeedScaleFactor=None) -> None:
@@ -164,7 +164,10 @@ class DriveSubsystem(Subsystem):
 
         :returns: The pose.
         """
-        return self.odometry.getPose()
+        # TODO: TEST IF THIS WORKS AND IF IT NEEDS TO BE REVERSED
+        pose = self.odometry.getPose()
+        pose.y = -pose.y
+        return pose
 
     def resetOdometry(self, pose: Pose2d) -> None:
         """Resets the odometry to the specified pose.
@@ -379,7 +382,7 @@ class DriveSubsystem(Subsystem):
         else:
             if self.gyro.isCalibrating():
                 state = "calibrating"
-            self._lastGyroAngle = self.gyro.getAngle()
+            self._lastGyroAngle = self.gyro.getAngle() # TODO: WONT BE YAW AS VERTICAL
             self._lastGyroAngleTime = now
 
         if state != self._lastGyroState:

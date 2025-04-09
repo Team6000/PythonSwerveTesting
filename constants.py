@@ -62,22 +62,22 @@ class DriveConstants:
     kFrontRightDrivingCanId = 21
     kFrontRightTurningCanId = 22
     kFrontRightCANCoderID = None
-    kFrontRightRotationOffset = 0
+    kFrontRightRotationOffset = None
 
     kBackLeftDrivingCanId = 31
     kBackLeftTurningCanId = 32
     kBackLeftCANCoderID = None
-    kBackLeftRotationOffset = 0
+    kBackLeftRotationOffset = None
 
     kBackRightDrivingCanId = 41
     kBackRightTurningCanId = 42
     kBackRightCANCoderID = None
-    kBackRightRotationOffset = 0
+    kBackRightRotationOffset = None
 
 
 
 
-    kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving)
+    kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving) #TODO CHECK
 
 
 def getSwerveDrivingMotorConfig(drivingMotorInverted: bool) -> SparkBaseConfig:
@@ -134,6 +134,7 @@ class ModuleConstants:
     kbackRight_encoder_inverted = False
 
     #TODO: Change all of these types of things so the pose is correct
+
     # The MAXSwerve module can be configured with one of three pinion gears: 12T, 13T, or 14T.
     # This changes the drive speed of the module (a pinion gear with more teeth will result in a
     # robot that drives faster).
@@ -161,7 +162,7 @@ class ModuleConstants:
 
     kTurningMotorGearReduction = (14.0 / 50) * (10.0 / 60.0)
     kTurningAbsEncoderPositionFactor = math.tau * kTurningMotorGearReduction # Converts to Radians
-    kTurningAbsEncoderVelocityFactor = (math.tau * kTurningMotorGearReduction) / 60.0  # radians per second #TODO:
+    kTurningAbsEncoderVelocityFactor = (math.tau * kTurningMotorGearReduction) / 60.0  # radians per second
 
     kTurningEncoderPositionPIDMinInput = 0  # radian
     kTurningEncoderPositionPIDMaxInput = kTurningEncoderPositionFactor  # radian

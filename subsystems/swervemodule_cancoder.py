@@ -38,7 +38,7 @@ class SwerveModule_CANCoder(SwerveModule):
 
         rotation_value = self.turning_AbsEncoder.get_absolute_position().value
         deg_value = rotation_value*360
-        adj_deg_value = deg_value - 90 #TODO: TEST NUMBER
+        adj_deg_value = deg_value - moduleRotationOffset
         rad_value = -adj_deg_value * math.pi/180
         self.turningEncoder.setPosition(rad_value)
 

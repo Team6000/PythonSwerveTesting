@@ -47,12 +47,12 @@ class SwerveModule:
         # Setup encoders and PID controllers for the driving and turning SPARKS MAX.
 
         self.drivingEncoder = self.drivingSparkMax.getEncoder()
-        self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder() # TODO: Would this get the Redux
+        self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder()
 
         self.drivingPIDController = self.drivingSparkMax.getClosedLoopController()
         self.turningPIDController = self.turningSparkMax.getClosedLoopController()
 
-        self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition() - self.moduleRotationOffset)
+        self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition())
         self.drivingEncoder.setPosition(0)
 
     def getState(self) -> SwerveModuleState:
@@ -64,7 +64,7 @@ class SwerveModule:
         # relative to the chassis.
         return SwerveModuleState(
             self.drivingEncoder.getVelocity(),
-            Rotation2d(self.turningEncoder.getPosition() - self.moduleRotationOffset),
+            Rotation2d(self.turningEncoder.getPosition()),
         )
 
     def getPosition(self) -> SwerveModulePosition:
@@ -76,7 +76,7 @@ class SwerveModule:
         # relative to the chassis.
         return SwerveModulePosition(
             self.drivingEncoder.getPosition(),
-            Rotation2d(self.turningEncoder.getPosition() - self.moduleRotationOffset),
+            Rotation2d(self.turningEncoder.getPosition()),
         )
 
     def setDesiredState(self, desiredState: SwerveModuleState) -> None:
@@ -97,8 +97,8 @@ class SwerveModule:
         # Apply offset to the desired state.
         correctedDesiredState = SwerveModuleState()
         correctedDesiredState.speed = desiredState.speed
-        # Add offset and reverse because this is good place to reverse the wheels for the rotation
-        correctedDesiredState.angle = -(desiredState.angle + Rotation2d(self.moduleRotationOffset))
+        # Reversed because this is good place to reverse the wheels for the rotation
+        correctedDesiredState.angle = -desiredState.angle
 
         # Optimize the reference state to avoid spinning further than 90 degrees.
         optimizedDesiredState = correctedDesiredState
