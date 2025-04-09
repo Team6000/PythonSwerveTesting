@@ -2,8 +2,9 @@ import math
 
 from wpimath.geometry import Rotation2d
 
+from constants import getSwerveTurningMotorConfig
 from subsystems.swervemodule import SwerveModule
-from rev import SparkMax
+from rev import SparkMax, SparkBase
 from phoenix6.hardware import CANcoder
 
 class SwerveModule_CANCoder(SwerveModule):
@@ -20,6 +21,14 @@ class SwerveModule_CANCoder(SwerveModule):
     ) :
         super().__init__(drivingCANId, turningCANId, moduleRotationOffset, turnMotorInverted, driveMotorInverted, encoderInverted, motorControllerType)
 
+        self.turningSparkMax.configure(
+            getSwerveTurningMotorConfig(turnMotorInverted, encoderInverted, abs_enc=False),
+            SparkBase.ResetMode.kResetSafeParameters,
+            SparkBase.PersistMode.kPersistParameters)
+
+        self.turningPIDController = self.turningSparkMax.getClosedLoopController()
+
+
         # Gets CANCoder Abs Encoder Position
         self.canCoder_id = canCoder_id
         self.turning_AbsEncoder = CANcoder(canCoder_id)
@@ -28,7 +37,9 @@ class SwerveModule_CANCoder(SwerveModule):
         self.turningEncoder = self.turningSparkMax.getEncoder()
 
         rotation_value = self.turning_AbsEncoder.get_absolute_position().value
-        rad_value = rotation_value * math.tau
+        deg_value = rotation_value*360
+        adj_deg_value = deg_value - 155
+        rad_value = -adj_deg_value * 180/math.pi
         self.turningEncoder.setPosition(rad_value)
 
         # Uses the new encoder position to write the initial desired state to the current angle

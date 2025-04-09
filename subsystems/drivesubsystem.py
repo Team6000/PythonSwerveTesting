@@ -12,6 +12,8 @@ from wpimath.kinematics import (
     SwerveDrive4Odometry,
 )
 from wpilib import SmartDashboard, Field2d, DriverStation
+
+import constants
 from constants import DriveConstants, ModuleConstants
 import swerveutils
 from subsystems.swervemodule_cancoder import SwerveModule_CANCoder
@@ -22,6 +24,7 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 
+#TODO: Y WAS REVERSE IN POSE
 
 class DriveSubsystem(Subsystem):
     def __init__(self, maxSpeedScaleFactor=None) -> None:
@@ -146,11 +149,10 @@ class DriveSubsystem(Subsystem):
         SmartDashboard.putNumber("heading", pose.rotation().degrees())
 
         # Put the encoders  of all four modules
-        SmartDashboard.putNumber("fl", ((self.frontLeft.turningEncoder.getPosition() * 180 / math.pi) - self.frontLeft.moduleRotationOffset))
-        SmartDashboard.putNumber("fr", ((self.frontRight.turningEncoder.getPosition() * 180 / math.pi) - self.frontRight.moduleRotationOffset))
-        SmartDashboard.putNumber("bl", ((self.backLeft.turningEncoder.getPosition() * 180 / math.pi) - self.backLeft.moduleRotationOffset))
-        SmartDashboard.putNumber("br", ((self.backRight.turningEncoder.getPosition() * 180 / math.pi) - self.backRight.moduleRotationOffset))
-
+        SmartDashboard.putNumber("fl", ((self.frontLeft.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kFrontLeftRotationOffset))
+        SmartDashboard.putNumber("fr", ((self.frontRight.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kFrontRightRotationOffset))
+        SmartDashboard.putNumber("bl", ((self.backLeft.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kBackLeftRotationOffset))
+        SmartDashboard.putNumber("br", ((self.backRight.turningEncoder.getPosition() * 180 / math.pi) - constants.DriveConstants.kBackRightRotationOffset))
 
         self.field.setRobotPose(pose)
 

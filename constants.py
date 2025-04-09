@@ -57,7 +57,7 @@ class DriveConstants:
     kFrontLeftDrivingCanId = 11
     kFrontLeftTurningCanId = 12
     kFrontLeftCANCoderID = 13
-    kFrontLeftRotationOffset = 0
+    kFrontLeftRotationOffset = 0 #155 #TODO: DO THIS!!!
 
     kFrontRightDrivingCanId = 21
     kFrontRightTurningCanId = 22
@@ -94,7 +94,7 @@ def getSwerveDrivingMotorConfig(drivingMotorInverted: bool) -> SparkBaseConfig:
     return drivingConfig
 
 
-def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool) -> SparkBaseConfig:
+def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool, abs_enc = True) -> SparkBaseConfig:
     turningConfig = SparkBaseConfig()
     turningConfig.inverted(turnMotorInverted)
     turningConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
@@ -104,7 +104,10 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool) 
     turningConfig.absoluteEncoder.inverted(encoderInverted)
     turningConfig.encoder.positionConversionFactor(ModuleConstants.kTurningAbsEncoderPositionFactor)
     turningConfig.encoder.velocityConversionFactor(ModuleConstants.kTurningAbsEncoderVelocityFactor)
-    turningConfig.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
+    if abs_enc:
+        turningConfig.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
+    else:
+        turningConfig.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
     turningConfig.closedLoop.pid(ModuleConstants.kTurningP, ModuleConstants.kTurningI, ModuleConstants.kTurningD)
     turningConfig.closedLoop.velocityFF(ModuleConstants.kTurningFF)
     turningConfig.closedLoop.outputRange(ModuleConstants.kTurningMinOutput, ModuleConstants.kTurningMaxOutput)
