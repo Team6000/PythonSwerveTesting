@@ -3,6 +3,7 @@ import typing
 import wpilib
 
 from commands2 import Subsystem
+from pathplannerlib.logging import PathPlannerLogging
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import (
@@ -157,6 +158,15 @@ class DriveSubsystem(Subsystem):
         new_pose = Pose2d(pose.x,-pose.y,pose.rotation()) # TODO: Test and find reason for
 
         self.field.setRobotPose(new_pose)
+
+        # TODO: TEST
+        PathPlannerLogging.setLogCurrentPoseCallback(lambda put_pose: self.field.setRobotPose(put_pose))
+
+        # Logging callback for target robot pose
+        PathPlannerLogging.setLogTargetPoseCallback(lambda put_pose: self.field.getObject('target pose').setPose(put_pose))
+
+        # Logging callback for the active path, this is sent as a list of poses
+        PathPlannerLogging.setLogActivePathCallback(lambda put_poses: self.field.getObject('path').setPoses(put_poses))
 
     def getPoseHeading(self) -> Rotation2d:
         return self.getPose().rotation()
