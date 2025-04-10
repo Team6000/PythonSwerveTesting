@@ -14,6 +14,8 @@ from subsystems.drivesubsystem import DriveSubsystem
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
 
+# TODO: CHECK IF THE robopy.ini worked
+
 class RobotContainer:
     """
     This class is where the bulk of the robot should be declared. Since Command-based is a
