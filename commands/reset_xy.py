@@ -1,22 +1,22 @@
 from __future__ import annotations
 import commands2
 
-from wpimath.geometry import Rotation2d, Pose2d, Translation2d
+from wpimath.geometry import Rotation2d, Pose2d
 
-# TODO: DOESN'T WORK
+# TODO: DOESN'T WORK, NOT ENOUGH TIME TO TEST
 
 class ResetXY(commands2.Command):
     def __init__(self, x, y, headingDegrees, drivetrain):
         """
         Reset the starting (X, Y) and heading (in degrees) of the robot to where they should be.
         :param x: X
-        :param y: X
+        :param y: Y
         :param headingDegrees: heading (for example: 0 = "North" of the field, 180 = "South" of the field)
         :param drivetrain: drivetrain on which the (X, Y, heading) should be set
         """
         super().__init__()
         self.drivetrain = drivetrain
-        self.position = Pose2d(Translation2d(x, y), Rotation2d.fromDegrees(headingDegrees))
+        self.position = Pose2d(x,y, Rotation2d.fromDegrees(headingDegrees))
         self.addRequirements(drivetrain)
 
     def initialize(self):
@@ -42,7 +42,7 @@ class ResetSwerveFront(commands2.Command):
         self.drivetrain = drivetrain
         self.addRequirements(drivetrain)
 
-    def initialize(self):
+    def initialize(self): # TODO: DOES THIS DO ANYTHING??
         pose = self.drivetrain.getPose()
         self.drivetrain.resetOdometry(pose)
 
