@@ -9,8 +9,6 @@ numerical or boolean constants. Don't use this for any other purpose!
 
 
 import math
-
-#import rev
 from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
