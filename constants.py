@@ -8,6 +8,7 @@ numerical or boolean constants. Don't use this for any other purpose!
 """
 
 
+
 import math
 from wpimath import units
 from wpimath.geometry import Translation2d
