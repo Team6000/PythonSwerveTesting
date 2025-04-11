@@ -32,6 +32,7 @@ class DriveConstants:
     kMagnitudeSlewRate = 1.8  # percent per second (1 = 100%)
     kRotationalSlewRate = 2.0  # percent per second (1 = 100%)
 
+    # TODO:
     # Chassis configuration
     kTrackWidth = units.inchesToMeters(26.5)
     # Distance between centers of right and left wheels on robot
@@ -45,11 +46,6 @@ class DriveConstants:
         Translation2d(-kWheelBase / 2, -kTrackWidth / 2),
     ]
     kDriveKinematics = SwerveDrive4Kinematics(*kModulePositions)
-
-
-    # set the above to == False, if you are using Rev zeroing tool (and you have to tinker with offsets below)
-
-
 
 
 
@@ -133,19 +129,13 @@ class ModuleConstants:
     kbackLeft_encoder_inverted = False
     kbackRight_encoder_inverted = False
 
-    #TODO: Change all of these types of things so the pose is correct
-
-    # The MAXSwerve module can be configured with one of three pinion gears: 12T, 13T, or 14T.
-    # This changes the drive speed of the module (a pinion gear with more teeth will result in a
-    # robot that drives faster).
-    kDrivingMotorPinionTeeth = 14
 
     # Calculations required for driving motor conversion factors and feed forward
     kDrivingMotorFreeSpeedRps = NeoMotorConstants.kFreeSpeedRpm / 60
-    kWheelDiameterMeters = 0.0762
+    kWheelDiameterMeters = 0.116
     kWheelCircumferenceMeters = kWheelDiameterMeters * math.pi
-    # 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15 teeth on the bevel pinion
-    kDrivingMotorReduction = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15)
+    kDrivingMotorReduction = (16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0)
+
     kDriveWheelFreeSpeedRps = (
         kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters
     ) / kDrivingMotorReduction
@@ -185,7 +175,7 @@ class ModuleConstants:
     kTurningMotorIdleMode = SparkBase.IdleMode.kBrake
 
     kDrivingMotorCurrentLimit = 50  # amp
-    kTurningMotorCurrentLimit = 20  # amp
+    kTurningMotorCurrentLimit = 20  # amp # TODO NERIYA HAD 40
 
     kDrivingMinSpeedMetersPerSecond = 0.01
 
@@ -193,22 +183,3 @@ class ModuleConstants:
 class OIConstants:
     kDriverControllerPort = 0
     kDriveDeadband = 0.05
-
-
-class AutoConstants:
-    kUseSqrtControl = True  # improves arrival time and precision for simple driving commands
-
-    # below are really trajectory constants
-    kMaxSpeedMetersPerSecond = 3
-    kMaxAccelerationMetersPerSecondSquared = 3
-    kMaxAngularSpeedRadiansPerSecond = math.pi
-    kMaxAngularSpeedRadiansPerSecondSquared = math.pi
-
-    kPXController = 1
-    kPYController = 1
-    kPThetaController = 1
-
-    # Constraint for the motion profiled robot angle controller
-    kThetaControllerConstraints = TrapezoidProfileRadians.Constraints(
-        kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared
-    )
