@@ -14,7 +14,6 @@ import math
 from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
-from wpimath.trajectory import TrapezoidProfileRadians
 from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 
 
