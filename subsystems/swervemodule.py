@@ -95,7 +95,7 @@ class SwerveModule:
         # Apply offset to the desired state.
         correctedDesiredState = SwerveModuleState()
         correctedDesiredState.speed = desiredState.speed
-        # Reversed because this is good place to reverse the wheels for the rotation
+        # Reversed because this is good place to reverse the wheels for the rotation #TODO: WHY NOT REVERSE WHEELS?
         correctedDesiredState.angle = -desiredState.angle
 
         # Optimize the reference state to avoid spinning further than 90 degrees.

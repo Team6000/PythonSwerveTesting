@@ -3,18 +3,22 @@ from __future__ import annotations
 import commands2
 import typing
 
-from wpimath.geometry import Pose2d
 from commands2 import RunCommand
 from commands2.button import CommandGenericHID
 from wpilib import XboxController, SmartDashboard
 
 from constants import OIConstants
 from subsystems.drivesubsystem import DriveSubsystem
+from subsystems.limelightsubsystem import LimelightSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
 
+from commands.fancy_driving.limelight_localization import SetLimelightPoseCommand
+
+
 # TODO: CHECK IF THE robopy.ini worked
+# TODO: ADD LOCALIZER and LIMELIGHT CODE
 
 class RobotContainer:
     """
@@ -27,6 +31,7 @@ class RobotContainer:
     def __init__(self, robot) -> None:
         # The robot's subsystems
         self.robotDrive = DriveSubsystem()
+        self.limelight = LimelightSubsystem("limelight")
 
 
         # The driver's controller
@@ -69,7 +74,8 @@ class RobotContainer:
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
 
-
+        aButton = self.driverController.button(XboxController.Button.kA)
+        aButton.onTrue(SetLimelightPoseCommand(self.limelight, self.robotDrive))
 
     def disablePIDSubsystems(self) -> None:
         """Disables all ProfiledPIDSubsystem and PIDSubsystem instances.
