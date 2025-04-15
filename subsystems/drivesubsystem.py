@@ -146,7 +146,7 @@ class DriveSubsystem(Subsystem):
         )
         # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
-        SmartDashboard.putNumber("y", -pose.y)
+        SmartDashboard.putNumber("y", pose.y)
         SmartDashboard.putNumber("pose heading", pose.rotation().degrees())
         SmartDashboard.putNumber("gyro heading", self.getGyroHeading().degrees())
 
@@ -156,7 +156,7 @@ class DriveSubsystem(Subsystem):
         SmartDashboard.putNumber("bl", (self.backLeft.turningEncoder.getPosition() * 180 / math.pi))
         SmartDashboard.putNumber("br", (self.backRight.turningEncoder.getPosition() * 180 / math.pi))
 
-        new_pose = Pose2d(pose.x,-pose.y,pose.rotation()) # TODO: Test and find reason for
+        new_pose = Pose2d(pose.x,pose.y,pose.rotation())
 
         self.field.setRobotPose(new_pose)
 
@@ -199,7 +199,7 @@ class DriveSubsystem(Subsystem):
 
         :returns: The pose.
         """
-        # TODO: TEST IF THIS WORKS AND IF IT NEEDS TO BE REVERSED
+        # TODO: TEST IF THIS WORKS AND IF IT NEEDS TO BE REVERSED. WHY DOES IT NEED TO BE REVERSED!!
         og_pose = self.odometry.getPose()
         pose = Pose2d(og_pose.x,-og_pose.y,og_pose.rotation())
 
@@ -477,7 +477,8 @@ class DriveSubsystem(Subsystem):
         self.backLeft.setDesiredState(module_states[2])
         self.backRight.setDesiredState(module_states[3])
 
-    def shouldFlipPath(self):
+    @staticmethod
+    def shouldFlipPath() -> bool:
         # Boolean supplier that controls when the path will be mirrored for the red alliance
         # This will flip the path being followed to the red side of the field.
         # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
