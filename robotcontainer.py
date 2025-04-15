@@ -14,7 +14,6 @@ from subsystems.limelightsubsystem import LimelightSubsystem
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
 
-from commands.fancy_driving.limelight_localization import SetLimelightPoseCommand
 
 
 # TODO: CHECK IF THE robopy.ini worked
@@ -30,8 +29,7 @@ class RobotContainer:
 
     def __init__(self, robot) -> None:
         # The robot's subsystems
-        self.robotDrive = DriveSubsystem()
-        self.limelight = LimelightSubsystem("limelight")
+        self.robotDrive = DriveSubsystem(limelight_name="limelight")
 
 
         # The driver's controller
@@ -74,8 +72,6 @@ class RobotContainer:
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
 
-        aButton = self.driverController.button(XboxController.Button.kA)
-        aButton.onTrue(SetLimelightPoseCommand(self.limelight, self.robotDrive))
 
     def disablePIDSubsystems(self) -> None:
         """Disables all ProfiledPIDSubsystem and PIDSubsystem instances.

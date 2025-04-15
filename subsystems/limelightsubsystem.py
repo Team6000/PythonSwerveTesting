@@ -1,3 +1,5 @@
+from array import array
+
 from wpilib import Timer
 from commands2 import Subsystem
 from ntcore import NetworkTableInstance
@@ -18,7 +20,7 @@ class LimelightSubsystem(Subsystem):
         self.ty = self.table.getDoubleTopic("ty").getEntry(0.0)
         self.ta = self.table.getDoubleTopic("ta").getEntry(0.0)
         self.botpose_orb_wpiblue = self.table.getDoubleArrayTopic("botpose_orb_wpiblue").getEntry([])
-        self.botpose_tagcount = self.table.getDoubleTopic("botpose_tagcount").getEntry(0)
+        self.stddevs = self.table.getDoubleArrayTopic("stddevs").getEntry([])
 
         self.hb = self.table.getIntegerTopic("hb").getEntry(0)
         self.lastHeartbeat = 0
@@ -55,8 +57,24 @@ class LimelightSubsystem(Subsystem):
     def getBotPose(self):
         return self.botpose_orb_wpiblue.get()
 
-    def getBotPoseTagCount(self):
-        return int(self.botpose_tagcount.get())
+    def getStdDevs(self):
+        all_stddevs = self.stddevs.get()
+        MT2x = all_stddevs[6] #TODO: NOT GREAT DOCUMENTATION ON THIS POSITION
+        MT2y = all_stddevs[7] #TODO: NOT GREAT DOCUMENTATION ON THIS POSITION
+        imp_stddevs = [MT2x, MT2y]
+        return imp_stddevs
+
+
+    def getBotPoseEstimate(self):
+        pose = self.getBotPose(),
+        results = {
+            'botpose_orb_wpiblue': pose,
+            'tagcount': pose[8], #TODO: NOT GREAT DOCUMENTATION ON THIS POSITION
+            'latency_ms': pose[7],#TODO: NOT GREAT DOCUMENTATION ON THIS POSITION
+            "stddevs": self.getStdDevs()
+        }
+        return results
+
 
     def periodic(self) -> None:
         now = Timer.getFPGATimestamp()

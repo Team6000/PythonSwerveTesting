@@ -3,23 +3,25 @@ import typing
 import wpilib
 
 from commands2 import Subsystem
+from wpimath.estimator import SwerveDrive4PoseEstimator
 from pathplannerlib.logging import PathPlannerLogging
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import (
     ChassisSpeeds,
     SwerveModuleState,
-    SwerveDrive4Kinematics,
-    SwerveDrive4Odometry,
+    SwerveDrive4Kinematics
 )
 from wpilib import SmartDashboard, Field2d, DriverStation
 from wpiutil import Sendable
+
 
 
 from constants import DriveConstants, ModuleConstants
 import swerveutils
 from subsystems.swervemodule_cancoder import SwerveModule_CANCoder
 from subsystems.swervemodule import SwerveModule
+from subsystems.limelightsubsystem import LimelightSubsystem
 from rev import SparkMax
 import navx
 from pathplannerlib.auto import AutoBuilder
@@ -28,7 +30,7 @@ from pathplannerlib.config import RobotConfig, PIDConstants
 
 
 class DriveSubsystem(Subsystem):
-    def __init__(self, maxSpeedScaleFactor=None) -> None:
+    def __init__(self, maxSpeedScaleFactor=None, limelight_name=None) -> None:
         super().__init__()
 
         # Makes sure that if a maxSpeedScaleFactor is given it is a function
@@ -36,6 +38,9 @@ class DriveSubsystem(Subsystem):
             assert callable(maxSpeedScaleFactor)
 
         self.maxSpeedScaleFactor = maxSpeedScaleFactor
+        self.limelight_name = limelight_name
+        if limelight_name is not None:
+            self.limelight = LimelightSubsystem(limelight_name)
 
         # Create 4 Swerve Modules
         self.frontLeft = SwerveModule_CANCoder(
@@ -95,7 +100,7 @@ class DriveSubsystem(Subsystem):
         self.prevTime = wpilib.Timer.getFPGATimestamp()
 
         # Odometry class for tracking robot pose
-        self.odometry = SwerveDrive4Odometry(
+        self.pose_estimator = SwerveDrive4PoseEstimator(
             DriveConstants.kDriveKinematics,
             Rotation2d(),
             (
@@ -104,6 +109,7 @@ class DriveSubsystem(Subsystem):
                 self.backLeft.getPosition(),
                 self.backRight.getPosition(),
             ),
+            Pose2d(),  # initial pose
         )
         self.odometryHeadingOffset = Rotation2d(0)
         self.resetOdometry(Pose2d(0, 0, 0))
@@ -134,8 +140,9 @@ class DriveSubsystem(Subsystem):
 
     def periodic(self) -> None:
 
+        # TODO: POSE ESTIMATE THINGY??? TEST IT
         # Update the odometry of the robot
-        pose = self.odometry.update(
+        self.pose_estimator.update(
             self.getGyroHeading(),
             (
                 self.frontLeft.getPosition(),
@@ -144,9 +151,14 @@ class DriveSubsystem(Subsystem):
                 self.backRight.getPosition(),
             ),
         )
+        if self.limelight_name is not None:
+            vision_results = self.limelight.getBotPoseEstimate()
+            self.process_vision_update(self.pose_estimator ,vision_results)
+        pose = self.pose_estimator.getEstimatedPosition()
+
         # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
-        SmartDashboard.putNumber("y", -pose.y)
+        SmartDashboard.putNumber("y", pose.y)
         SmartDashboard.putNumber("pose heading", pose.rotation().degrees())
         SmartDashboard.putNumber("gyro heading", self.getGyroHeading().degrees())
 
@@ -156,7 +168,7 @@ class DriveSubsystem(Subsystem):
         SmartDashboard.putNumber("bl", (self.backLeft.turningEncoder.getPosition() * 180 / math.pi))
         SmartDashboard.putNumber("br", (self.backRight.turningEncoder.getPosition() * 180 / math.pi))
 
-        new_pose = Pose2d(pose.x,-pose.y,pose.rotation()) # TODO: Test and find reason for
+        new_pose = Pose2d(pose.x,pose.y,pose.rotation()) # Did this to test smt can be removed if everything works
 
         self.field.setRobotPose(new_pose)
 
@@ -191,6 +203,28 @@ class DriveSubsystem(Subsystem):
 
         SmartDashboard.putData("Swerve Drive", SwerveSendable(self))
 
+    @staticmethod
+    def process_vision_update(pose_estimator, vision_data: dict):
+        pose_array = vision_data.get("botpose_orb_wpiblue")
+        tag_count = vision_data.get("tagcount", 0)
+        latency_ms = vision_data.get("latency_ms", 0)
+        given_stddevs = vision_data.get("stddevs", [1,1])
+
+        if tag_count < 1 or not pose_array or len(pose_array) < 6: # Make sure it gave something
+            print("[Vision] Invalid vision data, skipping update")
+            return
+
+        vision_pose = Pose2d(pose_array[0], pose_array[1], Rotation2d.fromDegrees(pose_array[5]))
+
+        timestamp = wpilib.Timer.getFPGATimestamp() - (latency_ms / 1000.0) # Adjust timestamp for latency
+
+        # Apply the vision update to the pose estimator
+        pose_estimator.setVisionMeasurementStdDevs((given_stddevs[0], given_stddevs[1], 9999999)) # Might need to be a vector
+        pose_estimator.addVisionMeasurement(vision_pose, timestamp)
+
+        print(f"[Vision] Added vision pose with ambiguity, stddev {given_stddevs: .2f} at timestamp {timestamp:.2f}")
+
+
     def getPoseHeading(self) -> Rotation2d:
         return self.getPose().rotation()
 
@@ -200,9 +234,8 @@ class DriveSubsystem(Subsystem):
         :returns: The pose.
         """
         # TODO: TEST IF THIS WORKS AND IF IT NEEDS TO BE REVERSED
-        og_pose = self.odometry.getPose()
-        pose = Pose2d(og_pose.x,-og_pose.y,og_pose.rotation())
-
+        og_pose = self.pose_estimator.getPose()
+        pose = Pose2d(og_pose.x,og_pose.y,og_pose.rotation())
         return pose
 
     def resetOdometry(self, pose: Pose2d) -> None:
@@ -216,7 +249,7 @@ class DriveSubsystem(Subsystem):
         self._lastGyroAngleTime = 0
         self._lastGyroAngle = 0
 
-        self.odometry.resetPosition(
+        self.pose_estimator.resetPosition(
             self.getGyroHeading(),
             (
                 self.frontLeft.getPosition(),
@@ -226,13 +259,13 @@ class DriveSubsystem(Subsystem):
             ),
             pose,
         )
-        self.odometryHeadingOffset = self.odometry.getPose().rotation() - self.getGyroHeading()
+        self.odometryHeadingOffset = self.pose_estimator.getPose().rotation() - self.getGyroHeading()
 
 
     def adjustOdometry(self, dTrans: Translation2d, dRot: Rotation2d):
         pose = self.getPose()
         newPose = Pose2d(pose.translation() + dTrans, pose.rotation() + dRot)
-        self.odometry.resetPosition(
+        self.pose_estimator.resetPosition(
             pose.rotation() - self.odometryHeadingOffset,
             (
                 self.frontLeft.getPosition(),
