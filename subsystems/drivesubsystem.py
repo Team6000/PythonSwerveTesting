@@ -144,14 +144,15 @@ class DriveSubsystem(Subsystem):
         # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
         SmartDashboard.putNumber("y", pose.y)
-        SmartDashboard.putNumber("pose heading", pose.rotation().degrees())
-        SmartDashboard.putNumber("gyro heading", self.getGyroHeading().degrees())
+        # TODO: WHY DO THEY NEED TO BE REVERSED
+        SmartDashboard.putNumber("pose heading", -pose.rotation().degrees())
+        SmartDashboard.putNumber("gyro heading", -self.getGyroHeading().degrees())
 
-        # Put the encoders  of all four modules
-        SmartDashboard.putNumber("fl", (self.frontLeft.turningEncoder.getPosition() * 180 / math.pi))
-        SmartDashboard.putNumber("fr", (self.frontRight.turningEncoder.getPosition() * 180 / math.pi))
-        SmartDashboard.putNumber("bl", (self.backLeft.turningEncoder.getPosition() * 180 / math.pi))
-        SmartDashboard.putNumber("br", (self.backRight.turningEncoder.getPosition() * 180 / math.pi))
+        # Put the encoders  of all four modules #TODO: WHY DO THEY NEED TO BE REVERSED
+        SmartDashboard.putNumber("fl", (self.frontLeft.turningEncoder.getPosition() * -180 / math.pi))
+        SmartDashboard.putNumber("fr", (self.frontRight.turningEncoder.getPosition() * -180 / math.pi))
+        SmartDashboard.putNumber("bl", (self.backLeft.turningEncoder.getPosition() * -180 / math.pi))
+        SmartDashboard.putNumber("br", (self.backRight.turningEncoder.getPosition() * -180 / math.pi))
 
         self.field.setRobotPose(pose)
 

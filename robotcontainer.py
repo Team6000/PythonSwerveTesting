@@ -14,7 +14,6 @@ from subsystems.drivesubsystem import DriveSubsystem
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
 
-# TODO: CHECK IF THE robopy.ini worked
 
 class RobotContainer:
     """
@@ -59,6 +58,7 @@ class RobotContainer:
         instantiating a :GenericHID or one of its subclasses (Joystick or XboxController),
         and then passing it to a JoystickButton.
         """
+        #TODO: ADD DRIVE FORWARD BUTTON
 
         xButton = self.driverController.button(XboxController.Button.kX)
         xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive))
