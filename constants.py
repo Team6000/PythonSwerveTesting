@@ -50,7 +50,7 @@ class DriveConstants:
     kFrontLeftDrivingCanId = 11
     kFrontLeftTurningCanId = 12
     kFrontLeftCANCoderID = 13
-    kFrontLeftRotationOffset = 20
+    kFrontLeftRotationOffset = 20 #TODO
 
     kFrontRightDrivingCanId = 21
     kFrontRightTurningCanId = 22
@@ -110,21 +110,21 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool, 
 
 
 class ModuleConstants:
-
+    #TODO: DRIVE INVERTED
     kfrontLeft_drive_inverted = False
-    kfrontLeft_turn_inverted = False
+    kfrontLeft_turn_inverted = True
     kfrontRight_drive_inverted = False
-    kfrontRight_turn_inverted = False
+    kfrontRight_turn_inverted = True
     kbackLeft_drive_inverted = False
-    kbackLeft_turn_inverted = False
+    kbackLeft_turn_inverted = True
     kbackRight_drive_inverted = False
-    kbackRight_turn_inverted = False
+    kbackRight_turn_inverted = True
 
 
     kfrontLeft_encoder_inverted = False
-    kfrontRight_encoder_inverted = False
-    kbackLeft_encoder_inverted = False
-    kbackRight_encoder_inverted = False
+    kfrontRight_encoder_inverted = True
+    kbackLeft_encoder_inverted = True
+    kbackRight_encoder_inverted = True
 
 
     # Calculations required for driving motor conversion factors and feed forward
