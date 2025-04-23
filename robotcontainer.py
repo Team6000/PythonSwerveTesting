@@ -61,7 +61,7 @@ class RobotContainer:
         """
 
         xButton = self.driverController.button(XboxController.Button.kX)
-        xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive)) #TODO: DOESN'T WORK
+        xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive))
 
         yButton = self.driverController.button(XboxController.Button.kY)
         yButton.onTrue(ResetSwerveFront(self.robotDrive))
