@@ -158,30 +158,30 @@ class DriveSubsystem(Subsystem):
         new_pose = Pose2d(pose.x, pose.y, pose.rotation()) #TODO
         self.field.setRobotPose(new_pose)
 
-        # TODO: NOT WORKING
+        # TODO: MADE A FIX. TEST IF WORKS NOW
         # SwerveDrive Dashboard Layout:
-        # class SwerveSendable(Sendable,DriveSubsystem):
-        #     def __init__(self, swerve):
-        #         super().__init__()
-        #         self.swerve = swerve
-        #
-        #     def initSendable(self, Swerve_Layout):
-        #         Swerve_Layout.setSmartDashboardType("SwerveDrive")
-        #         Swerve_Layout.addDoubleProperty("Front Left Angle", lambda: self.frontLeft.getState().angle.radians(), lambda none: None),
-        #         Swerve_Layout.addDoubleProperty("Front Left Velocity", lambda: self.frontLeft.getState().speed, lambda none: None),
-        #
-        #         Swerve_Layout.addDoubleProperty("Front Right Angle", lambda: self.frontRight.getState().angle.radians(), lambda none: None),
-        #         Swerve_Layout.addDoubleProperty("Front Right Velocity", lambda: self.frontRight.getState().speed, lambda none: None),
-        #
-        #         Swerve_Layout.addDoubleProperty("Back Left Angle", lambda: self.backLeft.getState().angle.radians(), lambda none: None),
-        #         Swerve_Layout.addDoubleProperty("Back Left Velocity", lambda: self.backLeft.getState().speed, lambda none: None),
-        #
-        #         Swerve_Layout.addDoubleProperty("Back Right Angle", lambda: self.backRight.getState().angle.radians(), lambda none: None),
-        #         Swerve_Layout.addDoubleProperty("Back Right Velocity", lambda: self.backRight.getState().speed, lambda none: None),
-        #
-        #         Swerve_Layout.addDoubleProperty("Robot Angle", lambda: self.getPoseHeading().getRadians(), lambda none: None)
-        #
-        # SmartDashboard.putData("Swerve Drive", SwerveSendable(self))
+        class SwerveSendable(DriveSubsystem):
+            def __init__(self, swerve):
+                super().__init__()
+                self.swerve = swerve
+
+            def initSendable(self, Swerve_Layout):
+                Swerve_Layout.setSmartDashboardType("SwerveDrive")
+                Swerve_Layout.addDoubleProperty("Front Left Angle", lambda: DriveSubsystem.frontLeft.getState().angle.radians(), lambda none: None),
+                Swerve_Layout.addDoubleProperty("Front Left Velocity", lambda: self.frontLeft.getState().speed, lambda none: None),
+
+                Swerve_Layout.addDoubleProperty("Front Right Angle", lambda: self.frontRight.getState().angle.radians(), lambda none: None),
+                Swerve_Layout.addDoubleProperty("Front Right Velocity", lambda: self.frontRight.getState().speed, lambda none: None),
+
+                Swerve_Layout.addDoubleProperty("Back Left Angle", lambda: self.backLeft.getState().angle.radians(), lambda none: None),
+                Swerve_Layout.addDoubleProperty("Back Left Velocity", lambda: self.backLeft.getState().speed, lambda none: None),
+
+                Swerve_Layout.addDoubleProperty("Back Right Angle", lambda: self.backRight.getState().angle.radians(), lambda none: None),
+                Swerve_Layout.addDoubleProperty("Back Right Velocity", lambda: self.backRight.getState().speed, lambda none: None),
+
+                Swerve_Layout.addDoubleProperty("Robot Angle", lambda: self.getPoseHeading().getRadians(), lambda none: None)
+
+        SmartDashboard.putData("Swerve Drive", SwerveSendable(self))
 
     def getPoseHeading(self) -> Rotation2d:
         return self.getPose().rotation()
