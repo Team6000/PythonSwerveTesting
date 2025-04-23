@@ -50,7 +50,7 @@ class DriveConstants:
     kFrontLeftDrivingCanId = 11
     kFrontLeftTurningCanId = 12
     kFrontLeftCANCoderID = 13
-    kFrontLeftRotationOffset = 20 #TODO
+    kFrontLeftRotationOffset = 200.92
 
     kFrontRightDrivingCanId = 21
     kFrontRightTurningCanId = 22
@@ -110,7 +110,7 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool, 
 
 
 class ModuleConstants:
-    #TODO: DRIVE INVERTED
+    #TODO: DRIVE INVERTED: DO WHEN WE FIX SWERVE
     kfrontLeft_drive_inverted = False
     kfrontLeft_turn_inverted = True
     kfrontRight_drive_inverted = False

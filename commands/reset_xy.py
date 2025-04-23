@@ -3,7 +3,6 @@ import commands2
 
 from wpimath.geometry import Rotation2d, Pose2d
 
-# TODO: DOESN'T WORK, NOT ENOUGH TIME TO TEST
 
 class ResetXY(commands2.Command):
     def __init__(self, x, y, headingDegrees, drivetrain):
