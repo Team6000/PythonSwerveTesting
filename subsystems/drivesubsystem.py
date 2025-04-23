@@ -155,8 +155,8 @@ class DriveSubsystem(Subsystem):
         SmartDashboard.putNumber("bl", (self.backLeft.turningEncoder.getPosition() * 180 / math.pi))
         SmartDashboard.putNumber("br", (self.backRight.turningEncoder.getPosition() * 180 / math.pi))
 
-
-        self.field.setRobotPose(pose)
+        new_pose = Pose2d(pose.x, pose.y, pose.rotation()) #TODO
+        self.field.setRobotPose(new_pose)
 
         # TODO: NOT WORKING
         # SwerveDrive Dashboard Layout:
@@ -192,7 +192,7 @@ class DriveSubsystem(Subsystem):
         :returns: The pose.
         """
         og_pose = self.odometry.getPose()
-        pose = Pose2d(og_pose.x,-og_pose.y,og_pose.rotation())
+        pose = Pose2d(og_pose.x,og_pose.y,og_pose.rotation()) #TODO
 
         return pose
 
