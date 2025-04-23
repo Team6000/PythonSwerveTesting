@@ -43,7 +43,8 @@ class ResetSwerveFront(commands2.Command):
         self.addRequirements(drivetrain)
 
     def initialize(self):
-        pose = self.drivetrain.getPose()
+        curr_pose = self.drivetrain.getPose()
+        pose = Pose2d(curr_pose.x, curr_pose.y, Rotation2d(0))
         self.drivetrain.resetOdometry(pose)
 
     def isFinished(self) -> bool:

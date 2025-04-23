@@ -64,7 +64,7 @@ class RobotContainer:
         xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive))
 
         yButton = self.driverController.button(XboxController.Button.kY)
-        yButton.onTrue(ResetSwerveFront(self.robotDrive)) #TODO: DOESN'T WORK
+        yButton.onTrue(ResetSwerveFront(self.robotDrive))
 
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
