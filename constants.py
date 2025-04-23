@@ -132,7 +132,7 @@ class ModuleConstants:
     kDrivingMotorFreeSpeedRps = NeoMotorConstants.kFreeSpeedRpm / 60
     kWheelDiameterMeters = 0.116
     kWheelCircumferenceMeters = kWheelDiameterMeters * math.pi
-    kDrivingMotorReduction = (16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0)
+    kDrivingMotorReduction = (50.0/16.0) * (17.0 /27.0) * (45.0 / 15.0)
 
     kDriveWheelFreeSpeedRps = (
         kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters
