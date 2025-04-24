@@ -5,11 +5,12 @@ import wpilib
 from commands2 import Subsystem
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
+from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.kinematics import (
     ChassisSpeeds,
     SwerveModuleState,
     SwerveDrive4Kinematics,
-    SwerveDrive4Odometry,
+    # SwerveDrive4Odometry, CHANGED POSE
 )
 from wpilib import SmartDashboard, Field2d, DriverStation
 
@@ -92,7 +93,9 @@ class DriveSubsystem(Subsystem):
         self.prevTime = wpilib.Timer.getFPGATimestamp()
 
         # Odometry class for tracking robot pose
-        self.odometry = SwerveDrive4Odometry(
+        #TODO: CHANGED ALL POSE TO POSE ESTIMATOR. LABELED ALL CHANGES: CHANGED POSE
+        #self.odometry = SwerveDrive4Odometry( # CHANGED POSE
+        self.pose_estimator = SwerveDrive4PoseEstimator(
             DriveConstants.kDriveKinematics,
             Rotation2d(),
             (
@@ -101,6 +104,7 @@ class DriveSubsystem(Subsystem):
                 self.backLeft.getPosition(),
                 self.backRight.getPosition(),
             ),
+            Pose2d() # CHANGED POSE
         )
         self.odometryHeadingOffset = Rotation2d(0)
         self.resetOdometry(Pose2d(0, 0, 0))
@@ -132,7 +136,8 @@ class DriveSubsystem(Subsystem):
     def periodic(self) -> None:
 
         # Update the odometry of the robot
-        pose = self.odometry.update(
+        # pose = self.odometry.update( # CHANGED POSE
+        self.pose_estimator.update(
             self.getGyroHeading(),
             (
                 self.frontLeft.getPosition(),
@@ -141,6 +146,8 @@ class DriveSubsystem(Subsystem):
                 self.backRight.getPosition(),
             ),
         )
+
+        pose = self.pose_estimator.getEstimatedPosition() # CHANGED POSE
         # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
         SmartDashboard.putNumber("y", pose.y)
@@ -166,7 +173,8 @@ class DriveSubsystem(Subsystem):
 
         :returns: The pose.
         """
-        pose = self.odometry.getPose()
+        # pose = self.odometry.getPose() # CHANGED POSE
+        pose = self.pose_estimator.getEstimatedPosition()
 
         return pose
 
@@ -181,7 +189,8 @@ class DriveSubsystem(Subsystem):
         self._lastGyroAngleTime = 0
         self._lastGyroAngle = 0
 
-        self.odometry.resetPosition(
+        self.pose_estimator.resetPosition(
+        # self.odometry.resetPosition( # CHANGED POSE
             self.getGyroHeading(),
             (
                 self.frontLeft.getPosition(),
@@ -191,13 +200,15 @@ class DriveSubsystem(Subsystem):
             ),
             pose,
         )
-        self.odometryHeadingOffset = self.odometry.getPose().rotation() - self.getGyroHeading()
+        self.odometryHeadingOffset = self.pose_estimator.getPose().rotation() - self.getGyroHeading()
+        #self.odometryHeadingOffset = self.odometry.getPose().rotation() - self.getGyroHeading() # CHANGED POSE
 
 
     def adjustOdometry(self, dTrans: Translation2d, dRot: Rotation2d):
         pose = self.getPose()
         newPose = Pose2d(pose.translation() + dTrans, pose.rotation() + dRot)
-        self.odometry.resetPosition(
+        # self.odometry.resetPosition( # CHANGED POSE
+        self.pose_estimator.resetPosition(
             pose.rotation() - self.odometryHeadingOffset,
             (
                 self.frontLeft.getPosition(),
