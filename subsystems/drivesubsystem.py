@@ -200,7 +200,7 @@ class DriveSubsystem(Subsystem):
             ),
             pose,
         )
-        self.odometryHeadingOffset = self.pose_estimator.getPose().rotation() - self.getGyroHeading()
+        self.odometryHeadingOffset = self.pose_estimator.getEstimatedPosition().rotation() - self.getGyroHeading()
         #self.odometryHeadingOffset = self.odometry.getPose().rotation() - self.getGyroHeading() # CHANGED POSE
 
 
