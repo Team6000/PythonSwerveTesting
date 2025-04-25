@@ -177,6 +177,10 @@ class ModuleConstants:
     kDrivingMinSpeedMetersPerSecond = 0.01
 
 
+class AutoMovementConstants:
+    kUseSqrtControl = True
+
+
 class OIConstants:
     kDriverControllerPort = 0
     kDriveDeadband = 0.05

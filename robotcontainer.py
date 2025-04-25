@@ -3,7 +3,7 @@ from __future__ import annotations
 import commands2
 import typing
 
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Rotation2d
 from commands2 import RunCommand
 from commands2.button import CommandGenericHID
 from wpilib import XboxController, SmartDashboard
@@ -13,6 +13,7 @@ from subsystems.drivesubsystem import DriveSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
+from commands.fancy_driving.pathplanner_to_pose import PathtoPose
 
 
 class RobotContainer:
@@ -26,6 +27,8 @@ class RobotContainer:
     def __init__(self, robot) -> None:
         # The robot's subsystems
         self.robotDrive = DriveSubsystem()
+
+
 
 
         # The driver's controller
@@ -68,6 +71,9 @@ class RobotContainer:
 
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
+
+        aButton = self.driverController.button(XboxController.Button.kA)
+        aButton.whileTrue(PathtoPose(Pose2d(10,10,Rotation2d(0)),self.robotDrive))
 
 
 
