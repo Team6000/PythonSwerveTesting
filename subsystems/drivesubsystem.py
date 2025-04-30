@@ -223,6 +223,14 @@ class DriveSubsystem(Subsystem):
     def stop(self):
         self.drive(0, 0, 0, False, False)
 
+    def ArcadeDrive( # Give Forward Speed and Angular Speed
+        self,
+        xSpeed: float,
+        rot: float,
+        square: bool = False,
+    ) -> None:
+        self.drive(xSpeed, 0, rot, False, False, square=square)
+
 
     def drive(
         self,
