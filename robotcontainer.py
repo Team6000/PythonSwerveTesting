@@ -72,8 +72,11 @@ class RobotContainer:
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
 
+        #TODO: TEST: WHICH ONE IS THE RIGHT WAY? DO ANY WORK??
         aButton = self.driverController.button(XboxController.Button.kA)
-        aButton.whileTrue(PathtoPose(Pose2d(10,10,Rotation2d(0)),self.robotDrive))
+        #move_to_pose = PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive)
+        move_to_pose = RunCommand(lambda: PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive))
+        aButton.whileTrue(move_to_pose)
 
 
 
