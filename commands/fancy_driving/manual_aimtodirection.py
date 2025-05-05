@@ -17,6 +17,7 @@ class AimToDirectionConstants:
     kAngleVelocityToleranceDegreesPerSec = 50  # velocity under 100 degrees/second is considered "stopped"
 
 
+
 class AimToDirection(commands2.Command):
     def __init__(self, degrees: float | typing.Callable[[], float], drivetrain, speed=1.0, fwd_speed=0.0):
         super().__init__()
@@ -33,7 +34,7 @@ class AimToDirection(commands2.Command):
         # setting the target angle in a way that works for all cases
         self.targetDegrees = degrees
         if degrees is None:
-            self.targetDegrees = lambda: self.drivetrain.getHeading().degrees()
+            self.targetDegrees = lambda: self.drivetrain.getGyroHeading().degrees()
         elif not callable(degrees):
             self.targetDegrees = lambda: degrees
 
@@ -42,7 +43,7 @@ class AimToDirection(commands2.Command):
 
     def execute(self):
         # 1. how many degrees are left to turn?
-        currentDirection = self.drivetrain.getHeading()
+        currentDirection = self.drivetrain.getGyroHeading()
         rotationRemaining = self.targetDirection - currentDirection
         degreesRemaining = rotationRemaining.degrees()
 
@@ -75,7 +76,7 @@ class AimToDirection(commands2.Command):
         if self.fwdSpeed != 0:
             return False   # if someone wants us to drive forward while aiming, then we are never finished
 
-        currentDirection = self.drivetrain.getHeading()
+        currentDirection = self.drivetrain.getGyroHeading()
         rotationRemaining = self.targetDirection - currentDirection
         degreesRemaining = rotationRemaining.degrees()
         # if we are pretty close to the direction we wanted, consider the command finished
