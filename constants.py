@@ -172,7 +172,7 @@ class ModuleConstants:
     kTurningMotorIdleMode = SparkBase.IdleMode.kBrake
 
     kDrivingMotorCurrentLimit = 50  # amp
-    kTurningMotorCurrentLimit = 20  # amp # TODO NERIYA HAD 40
+    kTurningMotorCurrentLimit = 20  # amp # TODO: JAVA CODE HAD 40
 
     kDrivingMinSpeedMetersPerSecond = 0.01
 
