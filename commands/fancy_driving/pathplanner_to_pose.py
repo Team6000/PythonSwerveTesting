@@ -15,7 +15,7 @@ class PathtoPose(commands2.Command):
         self.target_pose = target_pose
         self.drivetrain = drivetrain
         self.goal_end_vel = goal_end_vel
-        self.command = None
+        self.thecommand = None
 
     def initialize(self):
         constraints = PathConstraints(
@@ -23,23 +23,26 @@ class PathtoPose(commands2.Command):
             PathToPoseConstants.maxAngularVelocityRps, PathToPoseConstants.maxAngularAccelerationRpsSq
         )
 
-        self.command = AutoBuilder.pathfindToPose(
+        self.thecommand = AutoBuilder.pathfindToPose(
             self.target_pose,
             constraints,
             goal_end_vel=self.goal_end_vel,
         )
-        self.command.initialize()
+
+        self.thecommand.initialize()
+        self.thecommand.schedule()
+        #print("Is Scheduled", self.thecommand.isScheduled())
 
     def execute(self):
-        if self.command:
-            self.command.execute()
+        if self.thecommand:
+            self.thecommand.execute()
 
     def isFinished(self):
-        if self.command:
-            return self.command.isFinished()
+        if self.thecommand:
+            return self.thecommand.isFinished()
         return True  # Just in case command is None
 
     def end(self, interrupted: bool):
-        if self.command:
-            self.command.end(interrupted)
+        if self.thecommand:
+            self.thecommand.end(interrupted)
         self.drivetrain.stop()

@@ -3,6 +3,7 @@ from __future__ import annotations
 import commands2
 import typing
 
+from pathplannerlib.path import PathConstraints
 from wpimath.geometry import Pose2d, Rotation2d
 from commands2 import RunCommand
 from commands2.button import CommandGenericHID
@@ -13,7 +14,8 @@ from subsystems.drivesubsystem import DriveSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
-from commands.fancy_driving.pathplanner_to_pose import PathtoPose
+from commands.fancy_driving.pathplanner_to_pose import PathToPoseConstants
+from commands.fancy_driving.manual_aimtodirection import AimToDirection
 
 
 class RobotContainer:
@@ -69,21 +71,33 @@ class RobotContainer:
         yButton.onTrue(ResetSwerveFront(self.robotDrive))
 
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
-        rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
+        rbButton.onTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
 
         #TODO: TEST: WHICH ONE IS THE RIGHT WAY? DO ANY WORK??
-        aButton = self.driverController.button(XboxController.Button.kA)
-        #move_to_pose = PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive)
-        move_to_pose = RunCommand(lambda: PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive))
-        aButton.whileTrue(move_to_pose)
+        # aButton = self.driverController.button(XboxController.Button.kA)
+        # move_to_pose = PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive)
+        # #move_to_pose = RunCommand(lambda: PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive))
+        # aButton.whileTrue(move_to_pose)
 
-        #TODO: TEST. HAVE IT COMMENTED OUT SO WE CAN DO ONE AT A TIME
-        """
-        # Drives Forward
+        aButton = self.driverController.button(XboxController.Button.kA)
+        constraints = PathConstraints(
+            PathToPoseConstants.maxVelocityMps,
+            PathToPoseConstants.maxAccelerationMpsSq,
+            PathToPoseConstants.maxAngularVelocityRps,
+            PathToPoseConstants.maxAngularAccelerationRpsSq,
+        )
+        target_pose = Pose2d(10, 10, Rotation2d(0))
+        move_to_pose_command = AutoBuilder.pathfindToPose(
+            target_pose,
+            constraints,
+            goal_end_vel=0,
+        )
+        aButton.onTrue(move_to_pose_command)
+
+        #TODO: ADD MOVE FORWARD
         bButton = self.driverController.button(XboxController.Button.kB)
-        move_forward = RunCommand(lambda: self.robotDrive.drive(0.2, 0, 0, True, True, True))
-        bButton.whileTrue(move_forward)        
-    """
+        test = AimToDirection(50.0, self.robotDrive)
+        bButton.whileTrue(test)
 
 
     def disablePIDSubsystems(self) -> None:
