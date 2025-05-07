@@ -30,7 +30,7 @@ class RobotContainer:
         self.robotDrive = DriveSubsystem()
 
 
-        self.PathToPose = PathToPose(self.robotDrive, Pose2d(10, 6, Rotation2d(90)))
+        self.PathToPose = PathToPose(self.robotDrive, Pose2d(5, 6, Rotation2d(90)))
 
 
         # The driver's controller
