@@ -76,10 +76,14 @@ class RobotContainer:
         aButton = self.driverController.button(XboxController.Button.kA)
         aButton.onTrue(self.PathToPose)
 
-        #TODO: ADD MOVE FORWARD
         bButton = self.driverController.button(XboxController.Button.kB)
         test = AimToDirection(50.0, self.robotDrive)
         bButton.whileTrue(test)
+
+        lbButton = self.driverController.button(XboxController.Button.kLeftBumper)
+        lbButton.whileTrue(RunCommand(lambda: self.robotDrive.ArcadeDrive(0.1,0), self.robotDrive))
+
+
 
 
     def disablePIDSubsystems(self) -> None:
