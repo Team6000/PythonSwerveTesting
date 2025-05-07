@@ -19,7 +19,7 @@ class PathToPoseConstants:
     )
 
 # Option 1:
-
+"""
 class PathToPose(commands2.Command):
     def __init__(self, drive: DriveSubsystem, target_pose: Pose2d) -> None:
         super().__init__()
@@ -84,29 +84,24 @@ class PathToPose(commands2.Command):
         self.target_pose = target_pose
         self.setName("PathToPoseOuter")
         self.addRequirements(self.drivetrain) # TODO: TRY REMOVING IF DOESN'T WORK
+        print("Debug 0")
         
 
     def initialize(self) -> None:
-        print("Initializing PathToPose to:", self.target_pose)
+        print("Initializing PathToPose")
 
         self.command = AutoBuilder.pathfindToPose(
             self.target_pose,
             PathToPoseConstants.constraints
         )
-        self.command.schedule()  # Schedule the pathfinding command
+        self.command.schedule()# Schedule the pathfinding command
+        print("Debug 1")
 
     def isFinished(self) -> bool:
+        print("Debug 2")
         return self.command is not None and self.command.isFinished()
 
     def end(self, interrupted: bool) -> None:
+        print("Debug 3")
         if self.command:
             self.command.cancel()
-"""
-
-
-
-
-
-
-
-
