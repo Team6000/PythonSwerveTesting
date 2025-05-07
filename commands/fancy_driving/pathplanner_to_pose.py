@@ -25,7 +25,7 @@ class PathToPose(commands2.Command):
         self.command = None
         self.target_pose = target_pose
         self.setName("PathToPoseOuter")
-        self.addRequirements(self.drivetrain) # TODO: TRY REMOVING IF DOESN'T WORK
+        self.addRequirements(self.drivetrain)
 
 
     def initialize(self) -> None:
