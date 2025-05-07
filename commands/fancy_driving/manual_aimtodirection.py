@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 import typing
 import commands2
-
 from wpimath.geometry import Rotation2d
 from constants import AutoMovementConstants
 

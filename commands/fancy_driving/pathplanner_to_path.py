@@ -1,7 +1,7 @@
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 import commands2
-
+from subsystems.drivesubsystem import DriveSubsystem
 
 
 class PathToPathConstants:
@@ -10,34 +10,36 @@ class PathToPathConstants:
     maxAngularVelocityRps = 540
     maxAngularAccelerationRpsSq = 720
 
+    constraints = PathConstraints(
+        maxVelocityMps, maxAccelerationMpsSq,
+        maxAngularVelocityRps, maxAngularAccelerationRpsSq
+    )
+
 
 class PathtoPath(commands2.Command):
-    def __init__(self, target_path, drivetrain):
+    def __init__(self, target_path, drive: DriveSubsystem) -> None:
         super().__init__()
-        self.target_path = target_path
-        self.drivetrain = drivetrain
+
+        self.drivetrain = drive
         self.command = None
+        self.target_path = target_path
+        self.setName("PathToPathOuter")
+        self.addRequirements(self.drivetrain)
 
-    def initialize(self):
+
+    def initialize(self) -> None:
         path = PathPlannerPath.fromPathFile(self.target_path)
-        constraints = PathConstraints(
-            PathToPathConstants.maxVelocityMps, PathToPathConstants.maxAccelerationMpsSq,
-            PathToPathConstants.maxAngularVelocityRps, PathToPathConstants.maxAngularAccelerationRpsSq
+        self.command = AutoBuilder.pathfindThenFollowPath(
+            path,
+            PathToPathConstants.constraints
         )
-        self.command = AutoBuilder.pathfindThenFollowPath(path, constraints)
-        self.command.initialize()
+        self.command.schedule()
 
-    def execute(self):
-        if self.command:
-            self.command.execute()
-
-    def isFinished(self):
+    def isFinished(self) -> bool:
         if self.command:
             self.command.isFinished()
-        return True # Just incase no command was created
+        return True
 
-
-    def end(self, interrupted: bool):
+    def end(self, interrupted: bool) -> None:
         if self.command:
-            self.command.end(interrupted)
-        self.drivetrain.stop()
+            self.command.cancel()

@@ -33,10 +33,12 @@ class PathToPose(commands2.Command):
             self.target_pose,
             PathToPoseConstants.constraints
         )
-        self.command.schedule()# Schedule the pathfinding command
+        self.command.schedule() # Schedule the pathfinding command
 
     def isFinished(self) -> bool:
-        return self.command is not None and self.command.isFinished()
+        if self.command:
+            return self.command.isFinished()
+        return False
 
     def end(self, interrupted: bool) -> None:
         if self.command:
