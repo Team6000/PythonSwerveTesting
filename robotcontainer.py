@@ -77,8 +77,8 @@ class RobotContainer:
         aButton.onTrue(self.PathToPose)
 
         bButton = self.driverController.button(XboxController.Button.kB)
-        test = AimToDirection(50.0, self.robotDrive)
-        bButton.whileTrue(test)
+        aim_to_direction = AimToDirection(50.0, self.robotDrive)
+        bButton.whileTrue(aim_to_direction)
 
         lbButton = self.driverController.button(XboxController.Button.kLeftBumper)
         lbButton.whileTrue(RunCommand(lambda: self.robotDrive.ArcadeDrive(0.1,0), self.robotDrive))
