@@ -73,8 +73,6 @@ class RobotContainer:
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.onTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
 
-        #TODO: TEST: WHICH ONE IS THE RIGHT WAY? DO ANY WORK??
-
         aButton = self.driverController.button(XboxController.Button.kA)
         aButton.onTrue(self.PathToPose)
 

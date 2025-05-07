@@ -115,8 +115,7 @@ class DriveSubsystem(Subsystem):
         self.field = Field2d()
         SmartDashboard.putData("The Field", self.field)
 
-        # TODO: TEST COULD HELP:
-        # PathPlannerLogging.setLogActivePathCallback(lambda poses: self.field.getObject('path').setPoses(poses))
+        PathPlannerLogging.setLogActivePathCallback(lambda poses: self.field.getObject('path').setPoses(poses))
 
         # PathPlanner Setup:
         config = RobotConfig.fromGUISettings()
@@ -169,7 +168,6 @@ class DriveSubsystem(Subsystem):
 
         self.field.setRobotPose(pose)
 
-        # TODO: MAKE SURE WORKS
         current_command = self.getCurrentCommand()
         if current_command:
             SmartDashboard.putString("Current Command", current_command.getName())
