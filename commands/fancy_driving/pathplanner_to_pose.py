@@ -1,6 +1,11 @@
-from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathConstraints
 import commands2
+from pathplannerlib.auto import AutoBuilder
+from wpimath.geometry import Pose2d
+from subsystems.drivesubsystem import DriveSubsystem
+
+
+# https://github.com/Team4169/Swerve2025/blob/master/robotcontainer.py
 
 class PathToPoseConstants:
     maxVelocityMps = 3
@@ -8,44 +13,100 @@ class PathToPoseConstants:
     maxAngularVelocityRps = 540
     maxAngularAccelerationRpsSq = 720
 
+    constraints = PathConstraints(
+        maxVelocityMps, maxAccelerationMpsSq,
+        maxAngularVelocityRps, maxAngularAccelerationRpsSq
+    )
 
-class PathtoPose(commands2.Command):
-    def __init__(self, target_pose, drivetrain, goal_end_vel=0):
+# Option 1:
+
+class PathToPose(commands2.Command):
+    def __init__(self, drive: DriveSubsystem, target_pose: Pose2d) -> None:
         super().__init__()
+
+        self.drivetrain = drive
+        self.command = None
+        self.running = False
+        self.addRequirements(self.drivetrain)
         self.target_pose = target_pose
-        self.drivetrain = drivetrain
-        self.goal_end_vel = goal_end_vel
-        self.thecommand = None
+        self.setName("PathToPoseOuter")
 
-    def initialize(self):
-        print("Debug 3")
-        constraints = PathConstraints(
-            PathToPoseConstants.maxVelocityMps, PathToPoseConstants.maxAccelerationMpsSq,
-            PathToPoseConstants.maxAngularVelocityRps, PathToPoseConstants.maxAngularAccelerationRpsSq
+    def initialize(self) -> None:
+        print("initialize...initialize...initialize...initialize...initialize...initialize...")
+        self.running = True
+
+        targetPose = self.target_pose
+
+        self.command = AutoBuilder.pathfindToPose(
+            targetPose,
+            PathToPoseConstants.constraints
         )
 
-        self.thecommand = AutoBuilder.pathfindToPose(
-            self.target_pose,
-            constraints,
-            goal_end_vel=self.goal_end_vel,
-        )
-        print("Debug 4")
-
-    def return_command(self):
+        self.command.initialize()
         print("Debug 1")
-        self.initialize()
-        return self.thecommand
 
-    def execute(self):
-        print("Debug 2")
-        pass
+    def execute(self) -> None:
+        print("execute...execute...execute...execute...execute...execute...execute...")
+        self.command.execute()
 
-    def isFinished(self):
-        if self.thecommand:
-            return self.thecommand.isFinished()
-        return True  # Just in case command is None
+        if self.command.isFinished():
+            self.command.end(False)
+            self.running = False
+            print("Debug 2")
+        print("Debug 3")
+
+    def isFinished(self) -> bool:
+        if self.command:
+            print("Debug 4")
+            if self.command.isFinished():
+                print("Debug 5")
+                return True
+        return False
+
 
     def end(self, interrupted: bool):
-        if self.thecommand:
-            self.thecommand.end(interrupted)
-        self.drivetrain.stop()
+        print("Debug: 6")
+        if self.command:
+            print("Debug: 7")
+            self.command.cancel()
+            
+            
+"""
+
+# Option 2:
+
+class PathToPose(commands2.Command):
+    def __init__(self, drive: DriveSubsystem, target_pose: Pose2d) -> None:
+        super().__init__()
+
+        self.drivetrain = drive
+        self.command = None
+        self.target_pose = target_pose
+        self.setName("PathToPoseOuter")
+        self.addRequirements(self.drivetrain) # TODO: TRY REMOVING IF DOESN'T WORK
+        
+
+    def initialize(self) -> None:
+        print("Initializing PathToPose to:", self.target_pose)
+
+        self.command = AutoBuilder.pathfindToPose(
+            self.target_pose,
+            PathToPoseConstants.constraints
+        )
+        self.command.schedule()  # Schedule the pathfinding command
+
+    def isFinished(self) -> bool:
+        return self.command is not None and self.command.isFinished()
+
+    def end(self, interrupted: bool) -> None:
+        if self.command:
+            self.command.cancel()
+"""
+
+
+
+
+
+
+
+

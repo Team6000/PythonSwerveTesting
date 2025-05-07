@@ -3,7 +3,6 @@ from __future__ import annotations
 import commands2
 import typing
 
-from pathplannerlib.path import PathConstraints
 from wpimath.geometry import Pose2d, Rotation2d
 from commands2 import RunCommand
 from commands2.button import CommandGenericHID
@@ -15,6 +14,7 @@ from subsystems.drivesubsystem import DriveSubsystem
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
 from commands.fancy_driving.manual_aimtodirection import AimToDirection
+from commands.fancy_driving.pathplanner_to_pose import PathToPose
 
 
 class RobotContainer:
@@ -30,6 +30,7 @@ class RobotContainer:
         self.robotDrive = DriveSubsystem()
 
 
+        self.PathToPose = PathToPose(self.robotDrive, Pose2d(8, 8, Rotation2d(90)))
 
 
         # The driver's controller
@@ -75,8 +76,7 @@ class RobotContainer:
         #TODO: TEST: WHICH ONE IS THE RIGHT WAY? DO ANY WORK??
 
         aButton = self.driverController.button(XboxController.Button.kA)
-        aButton.whileTrue(RunCommand(self.robotDrive.the_command.initialize).andThen(RunCommand(lambda: print("Done Initializing")).withTimeout(2)).andThen(self.robotDrive.the_command))
-
+        aButton.onTrue(self.PathToPose)
 
         #TODO: ADD MOVE FORWARD
         bButton = self.driverController.button(XboxController.Button.kB)

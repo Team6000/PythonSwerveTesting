@@ -1,8 +1,12 @@
 import math
 import typing
+from multiprocessing.dummy import current_process
+
+import commands2
 import wpilib
 
 from commands2 import Subsystem
+from pathplannerlib.logging import PathPlannerLogging
 from pathplannerlib.path import PathConstraints
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
@@ -111,6 +115,9 @@ class DriveSubsystem(Subsystem):
         self.field = Field2d()
         SmartDashboard.putData("The Field", self.field)
 
+        # TODO: TEST COULD HELP:
+        # PathPlannerLogging.setLogActivePathCallback(lambda poses: self.field.getObject('path').setPoses(poses))
+
         # PathPlanner Setup:
         config = RobotConfig.fromGUISettings()
 
@@ -128,17 +135,6 @@ class DriveSubsystem(Subsystem):
             config,  # The robot configuration
             self.shouldFlipPath,  # Supplier to control path flipping based on alliance color
             self  # Reference to this subsystem to set requirements
-        )
-
-        constraints = PathConstraints(
-            3, 3,
-            540*(math.pi/180), 720*math.pi/180
-        )
-
-        self.the_command = AutoBuilder.pathfindToPose(
-            Pose2d(10,10,Rotation2d(90)),
-            constraints,
-            goal_end_vel=0
         )
 
 
@@ -173,6 +169,12 @@ class DriveSubsystem(Subsystem):
 
         self.field.setRobotPose(pose)
 
+        # TODO: MAKE SURE WORKS
+        current_command = self.getCurrentCommand()
+        if current_command:
+            SmartDashboard.putString("Current Command", current_command.getName())
+        else:
+            SmartDashboard.putString("Current Command", "None")
 
 
     def getPoseHeading(self) -> Rotation2d:
@@ -188,13 +190,6 @@ class DriveSubsystem(Subsystem):
 
         return pose
 
-
-    def drive_to_pose(self):
-
-        print("Command", self.the_command)
-
-        self.the_command.execute()
-        print("Command", self.the_command.isFinished())
 
     def resetOdometry(self, pose: Pose2d) -> None:
         """Resets the odometry to the specified pose.

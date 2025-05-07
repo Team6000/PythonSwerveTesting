@@ -12,6 +12,7 @@ class SwerveDrive(commands2.Command):
         Drive the robot at `driveSpeed` and `rotationSpeed` until this command is terminated.
         """
         super().__init__()
+        self.setName("Default Drive With Joystick") # TODO: Make sure this isn't causing issues
 
         self.forwardSpeed = forwardSpeed
         if not callable(forwardSpeed):

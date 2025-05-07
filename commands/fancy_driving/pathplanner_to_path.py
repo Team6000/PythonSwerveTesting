@@ -11,7 +11,7 @@ class PathToPathConstants:
     maxAngularAccelerationRpsSq = 720
 
 
-class PathtoPose(commands2.Command):
+class PathtoPath(commands2.Command):
     def __init__(self, target_path, drivetrain):
         super().__init__()
         self.target_path = target_path
