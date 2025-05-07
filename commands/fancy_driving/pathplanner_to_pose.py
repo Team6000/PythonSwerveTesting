@@ -18,6 +18,7 @@ class PathtoPose(commands2.Command):
         self.thecommand = None
 
     def initialize(self):
+        print("Debug 3")
         constraints = PathConstraints(
             PathToPoseConstants.maxVelocityMps, PathToPoseConstants.maxAccelerationMpsSq,
             PathToPoseConstants.maxAngularVelocityRps, PathToPoseConstants.maxAngularAccelerationRpsSq
@@ -28,14 +29,16 @@ class PathtoPose(commands2.Command):
             constraints,
             goal_end_vel=self.goal_end_vel,
         )
+        print("Debug 4")
 
-        self.thecommand.initialize()
-        self.thecommand.schedule()
-        #print("Is Scheduled", self.thecommand.isScheduled())
+    def return_command(self):
+        print("Debug 1")
+        self.initialize()
+        return self.thecommand
 
     def execute(self):
-        if self.thecommand:
-            self.thecommand.execute()
+        print("Debug 2")
+        pass
 
     def isFinished(self):
         if self.thecommand:

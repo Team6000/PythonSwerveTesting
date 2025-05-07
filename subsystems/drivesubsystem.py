@@ -3,6 +3,7 @@ import typing
 import wpilib
 
 from commands2 import Subsystem
+from pathplannerlib.path import PathConstraints
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.estimator import SwerveDrive4PoseEstimator
@@ -129,6 +130,17 @@ class DriveSubsystem(Subsystem):
             self  # Reference to this subsystem to set requirements
         )
 
+        constraints = PathConstraints(
+            3, 3,
+            540*(math.pi/180), 720*math.pi/180
+        )
+
+        self.the_command = AutoBuilder.pathfindToPose(
+            Pose2d(10,10,Rotation2d(90)),
+            constraints,
+            goal_end_vel=0
+        )
+
 
 
     def periodic(self) -> None:
@@ -175,6 +187,14 @@ class DriveSubsystem(Subsystem):
         pose = self.pose_estimator.getEstimatedPosition()
 
         return pose
+
+
+    def drive_to_pose(self):
+
+        print("Command", self.the_command)
+
+        self.the_command.execute()
+        print("Command", self.the_command.isFinished())
 
     def resetOdometry(self, pose: Pose2d) -> None:
         """Resets the odometry to the specified pose.

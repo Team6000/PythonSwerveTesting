@@ -14,7 +14,6 @@ from subsystems.drivesubsystem import DriveSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
-from commands.fancy_driving.pathplanner_to_pose import PathToPoseConstants
 from commands.fancy_driving.manual_aimtodirection import AimToDirection
 
 
@@ -74,25 +73,10 @@ class RobotContainer:
         rbButton.onTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
 
         #TODO: TEST: WHICH ONE IS THE RIGHT WAY? DO ANY WORK??
-        # aButton = self.driverController.button(XboxController.Button.kA)
-        # move_to_pose = PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive)
-        # #move_to_pose = RunCommand(lambda: PathtoPose(Pose2d(10,10,Rotation2d(0)), self.robotDrive))
-        # aButton.whileTrue(move_to_pose)
 
         aButton = self.driverController.button(XboxController.Button.kA)
-        constraints = PathConstraints(
-            PathToPoseConstants.maxVelocityMps,
-            PathToPoseConstants.maxAccelerationMpsSq,
-            PathToPoseConstants.maxAngularVelocityRps,
-            PathToPoseConstants.maxAngularAccelerationRpsSq,
-        )
-        target_pose = Pose2d(10, 10, Rotation2d(0))
-        move_to_pose_command = AutoBuilder.pathfindToPose(
-            target_pose,
-            constraints,
-            goal_end_vel=0,
-        )
-        aButton.onTrue(move_to_pose_command)
+        aButton.whileTrue(RunCommand(self.robotDrive.the_command.initialize).andThen(RunCommand(lambda: print("Done Initializing")).withTimeout(2)).andThen(self.robotDrive.the_command))
+
 
         #TODO: ADD MOVE FORWARD
         bButton = self.driverController.button(XboxController.Button.kB)

@@ -30,6 +30,9 @@ class MyRobot(commands2.TimedCommandRobot):
         # autonomous chooser on the dashboard.
         self.robotContainer = RobotContainer(self)
 
+    def robotPeriodic(self) -> None:
+        """This function is run every time the robot periodically updates"""
+
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
 
