@@ -1,13 +1,9 @@
 import math
 import typing
-from multiprocessing.dummy import current_process
-
-import commands2
 import wpilib
 
 from commands2 import Subsystem
 from pathplannerlib.logging import PathPlannerLogging
-from pathplannerlib.path import PathConstraints
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.estimator import SwerveDrive4PoseEstimator
@@ -97,7 +93,6 @@ class DriveSubsystem(Subsystem):
         self.prevTime = wpilib.Timer.getFPGATimestamp()
 
         # Odometry class for tracking robot pose
-        #self.odometry = SwerveDrive4Odometry(
         self.pose_estimator = SwerveDrive4PoseEstimator(
             DriveConstants.kDriveKinematics,
             Rotation2d(),
@@ -141,7 +136,6 @@ class DriveSubsystem(Subsystem):
     def periodic(self) -> None:
 
         # Update the odometry of the robot
-        # pose = self.odometry.update(
         self.pose_estimator.update(
             self.getGyroHeading(),
             (
@@ -183,7 +177,6 @@ class DriveSubsystem(Subsystem):
 
         :returns: The pose.
         """
-        # pose = self.odometry.getPose()
         pose = self.pose_estimator.getEstimatedPosition()
 
         return pose
@@ -216,7 +209,6 @@ class DriveSubsystem(Subsystem):
     def adjustOdometry(self, dTrans: Translation2d, dRot: Rotation2d):
         pose = self.getPose()
         newPose = Pose2d(pose.translation() + dTrans, pose.rotation() + dRot)
-        # self.odometry.resetPosition(
         self.pose_estimator.resetPosition(
             pose.rotation() - self.odometryHeadingOffset,
             (
