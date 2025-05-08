@@ -4,8 +4,7 @@ import commands2
  
 class SwerveDrive(commands2.Command):
     """
-    "holonomic" means that it can rotate independently of driving forward or left
-    (examples: mecanum drivetrain, ball drivetrain, swerve drivetrain)
+    Command to run the Swerve Drive robot and make the robot drive.
     """
     def __init__(self, drivetrain, forwardSpeed, leftSpeed, rotationSpeed, deadband=0, **kwargs):
         """
