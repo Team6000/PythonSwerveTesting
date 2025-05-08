@@ -4,7 +4,7 @@ import commands2
 import typing
 
 from wpimath.geometry import Pose2d, Rotation2d
-from commands2 import RunCommand
+from commands2 import RunCommand, ScheduleCommand, CommandScheduler
 from commands2.button import CommandGenericHID
 from wpilib import XboxController, SmartDashboard
 
@@ -75,6 +75,7 @@ class RobotContainer:
 
         aButton = self.driverController.button(XboxController.Button.kA)
         aButton.onTrue(self.PathToPose)
+        aButton.onFalse(RunCommand(lambda: CommandScheduler.getInstance().cancelAll()))
 
         bButton = self.driverController.button(XboxController.Button.kB)
         aim_to_direction = AimToDirection(50.0, self.robotDrive)
