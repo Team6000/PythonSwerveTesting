@@ -3,8 +3,8 @@ from __future__ import annotations
 import commands2
 import typing
 
-from wpimath.geometry import Pose2d
-from commands2 import RunCommand
+from wpimath.geometry import Pose2d, Rotation2d
+from commands2 import RunCommand, ScheduleCommand, CommandScheduler
 from commands2.button import CommandGenericHID
 from wpilib import XboxController, SmartDashboard
 
@@ -13,6 +13,9 @@ from subsystems.drivesubsystem import DriveSubsystem
 
 from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
+from commands.fancy_driving.manual_aimtodirection import AimToDirection
+from commands.fancy_driving.pathplanner_to_pose import PathToPose
+from commands.fancy_driving.pathplanner_to_path import PathToPath
 
 
 class RobotContainer:
@@ -26,6 +29,10 @@ class RobotContainer:
     def __init__(self, robot) -> None:
         # The robot's subsystems
         self.robotDrive = DriveSubsystem()
+
+
+        self.PathToPose = PathToPose(self.robotDrive, Pose2d(5, 6, Rotation2d(90)))
+        self.PathToPath = PathToPath("Path1", self.robotDrive)
 
 
         # The driver's controller
@@ -58,7 +65,6 @@ class RobotContainer:
         instantiating a :GenericHID or one of its subclasses (Joystick or XboxController),
         and then passing it to a JoystickButton.
         """
-        #TODO: ADD DRIVE FORWARD BUTTON
 
         xButton = self.driverController.button(XboxController.Button.kX)
         xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive))
@@ -67,7 +73,20 @@ class RobotContainer:
         yButton.onTrue(ResetSwerveFront(self.robotDrive))
 
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
-        rbButton.whileTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
+        rbButton.onTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
+
+        aButton = self.driverController.button(XboxController.Button.kA)
+        aButton.onTrue(self.PathToPose)
+        #aButton.onTrue(self.PathToPath)
+        aButton.onFalse(RunCommand(lambda: CommandScheduler.getInstance().cancelAll()))
+
+        bButton = self.driverController.button(XboxController.Button.kB)
+        aim_to_direction = AimToDirection(50.0, self.robotDrive)
+        bButton.whileTrue(aim_to_direction)
+
+        lbButton = self.driverController.button(XboxController.Button.kLeftBumper)
+        lbButton.whileTrue(RunCommand(lambda: self.robotDrive.ArcadeDrive(0.1,0), self.robotDrive))
+
 
 
 

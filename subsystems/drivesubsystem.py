@@ -3,6 +3,7 @@ import typing
 import wpilib
 
 from commands2 import Subsystem
+from pathplannerlib.logging import PathPlannerLogging
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.estimator import SwerveDrive4PoseEstimator
@@ -10,7 +11,6 @@ from wpimath.kinematics import (
     ChassisSpeeds,
     SwerveModuleState,
     SwerveDrive4Kinematics,
-    # SwerveDrive4Odometry, CHANGED POSE
 )
 from wpilib import SmartDashboard, Field2d, DriverStation
 
@@ -93,8 +93,6 @@ class DriveSubsystem(Subsystem):
         self.prevTime = wpilib.Timer.getFPGATimestamp()
 
         # Odometry class for tracking robot pose
-        #TODO: CHANGED ALL POSE TO POSE ESTIMATOR. LABELED ALL CHANGES: CHANGED POSE
-        #self.odometry = SwerveDrive4Odometry( # CHANGED POSE
         self.pose_estimator = SwerveDrive4PoseEstimator(
             DriveConstants.kDriveKinematics,
             Rotation2d(),
@@ -104,13 +102,15 @@ class DriveSubsystem(Subsystem):
                 self.backLeft.getPosition(),
                 self.backRight.getPosition(),
             ),
-            Pose2d() # CHANGED POSE
+            Pose2d()
         )
         self.odometryHeadingOffset = Rotation2d(0)
         self.resetOdometry(Pose2d(0, 0, 0))
 
         self.field = Field2d()
         SmartDashboard.putData("The Field", self.field)
+
+        PathPlannerLogging.setLogActivePathCallback(lambda poses: self.field.getObject('path').setPoses(poses))
 
         # PathPlanner Setup:
         config = RobotConfig.fromGUISettings()
@@ -136,7 +136,6 @@ class DriveSubsystem(Subsystem):
     def periodic(self) -> None:
 
         # Update the odometry of the robot
-        # pose = self.odometry.update( # CHANGED POSE
         self.pose_estimator.update(
             self.getGyroHeading(),
             (
@@ -147,7 +146,7 @@ class DriveSubsystem(Subsystem):
             ),
         )
 
-        pose = self.pose_estimator.getEstimatedPosition() # CHANGED POSE
+        pose = self.pose_estimator.getEstimatedPosition()
         # Puts info of pose on SmartDashboard
         SmartDashboard.putNumber("x", pose.x)
         SmartDashboard.putNumber("y", pose.y)
@@ -163,6 +162,11 @@ class DriveSubsystem(Subsystem):
 
         self.field.setRobotPose(pose)
 
+        current_command = self.getCurrentCommand()
+        if current_command:
+            SmartDashboard.putString("Current Command", current_command.getName())
+        else:
+            SmartDashboard.putString("Current Command", "None")
 
 
     def getPoseHeading(self) -> Rotation2d:
@@ -173,10 +177,10 @@ class DriveSubsystem(Subsystem):
 
         :returns: The pose.
         """
-        # pose = self.odometry.getPose() # CHANGED POSE
         pose = self.pose_estimator.getEstimatedPosition()
 
         return pose
+
 
     def resetOdometry(self, pose: Pose2d) -> None:
         """Resets the odometry to the specified pose.
@@ -190,7 +194,6 @@ class DriveSubsystem(Subsystem):
         self._lastGyroAngle = 0
 
         self.pose_estimator.resetPosition(
-        # self.odometry.resetPosition( # CHANGED POSE
             self.getGyroHeading(),
             (
                 self.frontLeft.getPosition(),
@@ -201,13 +204,11 @@ class DriveSubsystem(Subsystem):
             pose,
         )
         self.odometryHeadingOffset = self.pose_estimator.getEstimatedPosition().rotation() - self.getGyroHeading()
-        #self.odometryHeadingOffset = self.odometry.getPose().rotation() - self.getGyroHeading() # CHANGED POSE
 
 
     def adjustOdometry(self, dTrans: Translation2d, dRot: Rotation2d):
         pose = self.getPose()
         newPose = Pose2d(pose.translation() + dTrans, pose.rotation() + dRot)
-        # self.odometry.resetPosition( # CHANGED POSE
         self.pose_estimator.resetPosition(
             pose.rotation() - self.odometryHeadingOffset,
             (
@@ -222,6 +223,14 @@ class DriveSubsystem(Subsystem):
 
     def stop(self):
         self.drive(0, 0, 0, False, False)
+
+    def ArcadeDrive( # Give Forward Speed and Angular Speed
+        self,
+        xSpeed: float,
+        rot: float,
+        square: bool = False,
+    ) -> None:
+        self.drive(xSpeed, 0, rot, False, False, square=square)
 
 
     def drive(
