@@ -18,8 +18,8 @@ class PathToPathConstants:
     )
 
 
-class PathtoPath(commands2.Command):
-    def __init__(self, target_path, drive: DriveSubsystem) -> None:
+class PathToPath(commands2.Command):
+    def __init__(self, target_path: str, drive: DriveSubsystem) -> None:
         super().__init__()
 
         self.drivetrain = drive

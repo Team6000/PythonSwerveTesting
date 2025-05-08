@@ -15,6 +15,7 @@ from commands.reset_xy import ResetXY, ResetSwerveFront
 from pathplannerlib.auto import AutoBuilder
 from commands.fancy_driving.manual_aimtodirection import AimToDirection
 from commands.fancy_driving.pathplanner_to_pose import PathToPose
+from commands.fancy_driving.pathplanner_to_path import PathToPath
 
 
 class RobotContainer:
@@ -31,6 +32,7 @@ class RobotContainer:
 
 
         self.PathToPose = PathToPose(self.robotDrive, Pose2d(5, 6, Rotation2d(90)))
+        self.PathToPath = PathToPath("Path1", self.robotDrive)
 
 
         # The driver's controller
@@ -75,6 +77,7 @@ class RobotContainer:
 
         aButton = self.driverController.button(XboxController.Button.kA)
         aButton.onTrue(self.PathToPose)
+        #aButton.onTrue(self.PathToPath)
         aButton.onFalse(RunCommand(lambda: CommandScheduler.getInstance().cancelAll()))
 
         bButton = self.driverController.button(XboxController.Button.kB)
