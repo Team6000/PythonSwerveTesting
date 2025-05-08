@@ -11,7 +11,7 @@ numerical or boolean constants. Don't use this for any other purpose!
 
 import math
 from wpimath import units
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Translation2d, Pose2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 
@@ -184,3 +184,18 @@ class AutoMovementConstants:
 class OIConstants:
     kDriverControllerPort = 0
     kDriveDeadband = 0.05
+
+
+class PoseBoundariesConstants:
+    x_min = 0
+    y_min = 0
+    x_max = 17.5
+    y_max = 8
+
+
+def in_field(pose: Pose2d):
+    if pose.x < PoseBoundariesConstants.x_min or pose.x > PoseBoundariesConstants.x_max:
+        return False
+    if pose.y < PoseBoundariesConstants.y_min or pose.y > PoseBoundariesConstants.y_max:
+        return False
+    return True

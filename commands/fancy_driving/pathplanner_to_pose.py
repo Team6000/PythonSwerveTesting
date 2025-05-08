@@ -2,6 +2,8 @@ from pathplannerlib.path import PathConstraints
 import commands2
 from pathplannerlib.auto import AutoBuilder
 from wpimath.geometry import Pose2d
+
+import constants
 from subsystems.drivesubsystem import DriveSubsystem
 
 
@@ -29,11 +31,15 @@ class PathToPose(commands2.Command):
 
 
     def initialize(self) -> None:
-        self.command = AutoBuilder.pathfindToPose(
-            self.target_pose,
-            PathToPoseConstants.constraints
-        )
-        self.command.schedule() # Schedule the pathfinding command
+        if constants.in_field(self.drivetrain.getPose()):
+            self.command = AutoBuilder.pathfindToPose(
+                self.target_pose,
+                PathToPoseConstants.constraints
+            )
+            self.command.schedule() # Schedule the pathfinding command
+        else:
+            print("you are outside. Get indoors fast")
+            self.cancel()
 
     def isFinished(self) -> bool:
         if self.command:

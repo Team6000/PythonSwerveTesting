@@ -201,7 +201,6 @@ class DriveSubsystem(Subsystem):
         self._lastGyroAngle = 0
 
         self.pose_estimator.resetPosition(
-        # self.odometry.resetPosition(
             self.getGyroHeading(),
             (
                 self.frontLeft.getPosition(),
@@ -212,7 +211,6 @@ class DriveSubsystem(Subsystem):
             pose,
         )
         self.odometryHeadingOffset = self.pose_estimator.getEstimatedPosition().rotation() - self.getGyroHeading()
-        #self.odometryHeadingOffset = self.odometry.getPose().rotation() - self.getGyroHeading()
 
 
     def adjustOdometry(self, dTrans: Translation2d, dRot: Rotation2d):

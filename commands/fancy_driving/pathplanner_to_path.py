@@ -1,6 +1,8 @@
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 import commands2
+
+import constants
 from subsystems.drivesubsystem import DriveSubsystem
 
 
@@ -28,12 +30,15 @@ class PathtoPath(commands2.Command):
 
 
     def initialize(self) -> None:
-        path = PathPlannerPath.fromPathFile(self.target_path)
-        self.command = AutoBuilder.pathfindThenFollowPath(
-            path,
-            PathToPathConstants.constraints
-        )
-        self.command.schedule()
+        if constants.in_field(self.drivetrain.getPose()):
+            path = PathPlannerPath.fromPathFile(self.target_path)
+            self.command = AutoBuilder.pathfindThenFollowPath(
+                path,
+                PathToPathConstants.constraints
+            )
+            self.command.schedule()
+        else:
+            self.cancel()
 
     def isFinished(self) -> bool:
         if self.command:

@@ -2,6 +2,8 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathConstraints
 import commands2
 from wpimath.geometry import Pose2d, Rotation2d
+
+import constants
 from subsystems.drivesubsystem import DriveSubsystem
 
 # DON'T USE. USE THE MANUAL ONE
@@ -31,14 +33,16 @@ class PathAimToDirection(commands2.Command):
 
     def initialize(self):
         current_pose = self.drivetrain.getPose()
-        self.commanded_pose = Pose2d(current_pose.x,current_pose.y,Rotation2d.fromDegrees(self.target_degrees))
-
-        self.command = AutoBuilder.pathfindToPose(
-            self.commanded_pose,
-            PathAimToDirectionConstants.constraints,
-            goal_end_vel=0,
-        )
-        self.command.schedule()
+        if constants.in_field(current_pose):
+            self.commanded_pose = Pose2d(current_pose.x,current_pose.y,Rotation2d.fromDegrees(self.target_degrees))
+            self.command = AutoBuilder.pathfindToPose(
+                self.commanded_pose,
+                PathAimToDirectionConstants.constraints,
+                goal_end_vel=0,
+            )
+            self.command.schedule()
+        else:
+            self.cancel()
 
     def isFinished(self):
         if self.command:
