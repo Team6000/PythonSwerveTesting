@@ -6,14 +6,13 @@ import commands2
 from wpimath.geometry import Rotation2d
 from constants import AutoMovementConstants
 
-# TODO: Just change this to PathPlanner with same x,y and different rot
 
 class AimToDirectionConstants:
     kP = 0.002  # 0.002 is the default, but you must calibrate this to your robot
     kUseSqrtControl = AutoMovementConstants.kUseSqrtControl
     kMinTurnSpeed = 0.03  # turning slower than this is unproductive for the motor (might not even spin)
     kAngleToleranceDegrees = 2.0  # plus minus 2 degrees is "close enough"
-    kAngleVelocityToleranceDegreesPerSec = 50  # velocity under 100 degrees/second is considered "stopped"
+    kAngleVelocityToleranceDegreesPerSec = 50  # velocity under 50 degrees/second is considered "stopped"
 
 
 
@@ -81,6 +80,6 @@ class AimToDirection(commands2.Command):
         # if we are pretty close to the direction we wanted, consider the command finished
         if abs(degreesRemaining) < AimToDirectionConstants.kAngleToleranceDegrees:
             turnVelocity = self.drivetrain.getTurnRateDegreesPerSec()
-            if abs(turnVelocity) < AimToDirectionConstants.kAngleVelocityToleranceDegreesPerSec: #TODO: WHY SO HIGH
+            if abs(turnVelocity) < AimToDirectionConstants.kAngleVelocityToleranceDegreesPerSec:
                 return True
         return False
