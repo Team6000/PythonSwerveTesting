@@ -1,2 +1,2 @@
 robotpy==2025.3.2.0
-certifi
+certifi==2025.4.26
