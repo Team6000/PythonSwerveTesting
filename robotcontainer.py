@@ -16,6 +16,7 @@ from pathplannerlib.auto import AutoBuilder
 from commands.fancy_driving.manual_aimtodirection import AimToDirection
 from commands.fancy_driving.pathplanner_to_pose import PathToPose
 from commands.fancy_driving.pathplanner_to_path import PathToPath
+from commands.swervedrive import SwerveDrive
 
 
 class RobotContainer:
@@ -30,22 +31,22 @@ class RobotContainer:
         # The robot's subsystems
         self.robotDrive = DriveSubsystem()
 
+        # Creates 2 commands
+        self.PathToPose = PathToPose(self.robotDrive, Pose2d(5, 6, Rotation2d(0))) # Drives to the Pose (5,6)
+        self.PathToPath = PathToPath("Path1", self.robotDrive) # Drives to Path1 then follows it
 
-        self.PathToPose = PathToPose(self.robotDrive, Pose2d(5, 6, Rotation2d(90)))
-        self.PathToPath = PathToPath("Path1", self.robotDrive)
 
-
-        # The driver's controller
+        # Creates the driver's controller
         self.driverController = CommandGenericHID(OIConstants.kDriverControllerPort)
 
-        # Configure the button bindings and autos
+        # Configure the button bindings and auto chooser
         self.configureButtonBindings()
         self.autoChooser = AutoBuilder.buildAutoChooser()
 
+        # Puts the auto chooser on the dashboard
         SmartDashboard.putData("Auto Chooser", self.autoChooser)
 
-        # Configure default command for driving using sticks
-        from commands.swervedrive import SwerveDrive
+        # Sets the default command of the DriveTrain to be just normal driving
         self.robotDrive.setDefaultCommand(
             SwerveDrive(
                 self.robotDrive,
@@ -61,29 +62,34 @@ class RobotContainer:
 
     def configureButtonBindings(self) -> None:
         """
-        Use this method to define your button->command mappings. Buttons can be created by
-        instantiating a :GenericHID or one of its subclasses (Joystick or XboxController),
-        and then passing it to a JoystickButton.
+        This function is used to set all the buttons to what they run
         """
 
+        # When x is clicked in resets the pose of the robot
         xButton = self.driverController.button(XboxController.Button.kX)
         xButton.onTrue(ResetXY(x=0.0, y=0.0, headingDegrees=0.0, drivetrain=self.robotDrive))
 
+        # When y is clicked it resets the front of the robot
         yButton = self.driverController.button(XboxController.Button.kY)
         yButton.onTrue(ResetSwerveFront(self.robotDrive))
 
+        # When you press the right bumper set the wheels to x formation
         rbButton = self.driverController.button(XboxController.Button.kRightBumper)
         rbButton.onTrue(RunCommand(self.robotDrive.setX, self.robotDrive))
 
+        # When you hold a: run the PathToPose or PathToPath command depending on what I have
         aButton = self.driverController.button(XboxController.Button.kA)
         aButton.onTrue(self.PathToPose)
         #aButton.onTrue(self.PathToPath)
+        # When you let go cancel the command
         aButton.onFalse(RunCommand(lambda: CommandScheduler.getInstance().cancelAll()))
 
+        # while I hold b aim to the given direction
         bButton = self.driverController.button(XboxController.Button.kB)
         aim_to_direction = AimToDirection(50.0, self.robotDrive)
         bButton.whileTrue(aim_to_direction)
 
+        # When left bumper is clicked drive forward (robot relative) at 0.1 speeds
         lbButton = self.driverController.button(XboxController.Button.kLeftBumper)
         lbButton.whileTrue(RunCommand(lambda: self.robotDrive.ArcadeDrive(0.1,0), self.robotDrive))
 

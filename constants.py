@@ -17,7 +17,7 @@ from rev import SparkBase, SparkBaseConfig, ClosedLoopConfig
 
 
 class NeoMotorConstants:
-    kFreeSpeedRpm = 5676
+    kFreeSpeedRpm = 5676 # Set value from online
 
 
 class DriveConstants:
@@ -34,19 +34,19 @@ class DriveConstants:
     kTrackWidth = units.inchesToMeters(22.5)
     # Distance between centers of right and left wheels on robot
     kWheelBase = units.inchesToMeters(22.5)
-
     # Distance between front and back wheels on robot
+
     kModulePositions = [
         Translation2d(kWheelBase / 2, kTrackWidth / 2),
         Translation2d(kWheelBase / 2, -kTrackWidth / 2),
         Translation2d(-kWheelBase / 2, kTrackWidth / 2),
         Translation2d(-kWheelBase / 2, -kTrackWidth / 2),
     ]
-    kDriveKinematics = SwerveDrive4Kinematics(*kModulePositions)
+    kDriveKinematics = SwerveDrive4Kinematics(*kModulePositions) # Creates the drivetrain Kinematics
 
 
 
-    # SPARK MAX CAN IDs
+    # IDs and Offsets for each Swerve Module
     kFrontLeftDrivingCanId = 11
     kFrontLeftTurningCanId = 12
     kFrontLeftCANCoderID = 13
@@ -67,13 +67,14 @@ class DriveConstants:
     kBackRightCANCoderID = None
     kBackRightRotationOffset = 0
 
-
-
-
+    # Whether the gyro should be reversed
     kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving)
 
 
 def getSwerveDrivingMotorConfig(drivingMotorInverted: bool) -> SparkBaseConfig:
+    """
+    The configuration for the Swerve drive motor
+    """
     drivingConfig = SparkBaseConfig()
     drivingConfig.inverted(drivingMotorInverted)
     drivingConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
@@ -88,6 +89,9 @@ def getSwerveDrivingMotorConfig(drivingMotorInverted: bool) -> SparkBaseConfig:
 
 
 def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool, abs_enc = True) -> SparkBaseConfig:
+    """
+    The configuration for the Swerve turning motor
+    """
     turningConfig = SparkBaseConfig()
     turningConfig.inverted(turnMotorInverted)
     turningConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
@@ -111,6 +115,8 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool, encoderInverted: bool, 
 
 class ModuleConstants:
     #TODO: DRIVE INVERTED: DO WHEN WE FIX SWERVE
+
+    # Whether the motors are inverted
     kfrontLeft_drive_inverted = False
     kfrontLeft_turn_inverted = True
     kfrontRight_drive_inverted = False
@@ -120,7 +126,7 @@ class ModuleConstants:
     kbackRight_drive_inverted = False
     kbackRight_turn_inverted = True
 
-
+    # If the encoders are inverted
     kfrontLeft_encoder_inverted = False
     kfrontRight_encoder_inverted = True
     kbackLeft_encoder_inverted = True
@@ -139,7 +145,7 @@ class ModuleConstants:
 
     kDrivingEncoderPositionFactor = (
         kWheelDiameterMeters * math.pi
-    ) / kDrivingMotorReduction  # meters
+    ) / kDrivingMotorReduction
     kDrivingEncoderVelocityFactor = (
         (kWheelDiameterMeters * math.pi) / kDrivingMotorReduction
     ) / 60.0  # meters per second
@@ -154,6 +160,7 @@ class ModuleConstants:
     kTurningEncoderPositionPIDMinInput = 0  # radian
     kTurningEncoderPositionPIDMaxInput = kTurningEncoderPositionFactor  # radian
 
+    # Driving motor PID
     kDrivingP = 0.04
     kDrivingI = 0
     kDrivingD = 0
@@ -161,6 +168,7 @@ class ModuleConstants:
     kDrivingMinOutput = -1
     kDrivingMaxOutput = 1
 
+    # Turning motor PID
     kTurningP = 1  # can be dialed down if you see oscillations in the turning motor
     kTurningI = 0
     kTurningD = 0
@@ -168,25 +176,31 @@ class ModuleConstants:
     kTurningMinOutput = -1
     kTurningMaxOutput = 1
 
+    # What the idle motor of the motors should be Brake or Coast
     kDrivingMotorIdleMode = SparkBase.IdleMode.kBrake
     kTurningMotorIdleMode = SparkBase.IdleMode.kBrake
 
+    # Rate limit for each motor
     kDrivingMotorCurrentLimit = 50  # amp
     kTurningMotorCurrentLimit = 20  # amp # NERIYA HAD 40
 
+    # Minimum speed of a module for it to be considered stopped
     kDrivingMinSpeedMetersPerSecond = 0.01
 
 
 class AutoMovementConstants:
+    # Constants for all autos go here
     kUseSqrtControl = True
 
 
 class OIConstants:
+    # Constants for teh controller go here
     kDriverControllerPort = 0
     kDriveDeadband = 0.05
 
 
 class PoseBoundariesConstants:
+    # Boundaries of the field so the robot can calculate if it's on the field
     x_min = 0
     y_min = 0
     x_max = 17.5
@@ -194,6 +208,7 @@ class PoseBoundariesConstants:
 
 
 def in_field(pose: Pose2d):
+    # Given a pose checks if that pose is on the field
     if pose.x < PoseBoundariesConstants.x_min or pose.x > PoseBoundariesConstants.x_max:
         return False
     if pose.y < PoseBoundariesConstants.y_min or pose.y > PoseBoundariesConstants.y_max:

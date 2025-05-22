@@ -8,11 +8,12 @@ class SwerveDrive(commands2.Command):
     """
     def __init__(self, drivetrain, forwardSpeed, leftSpeed, rotationSpeed, deadband=0, **kwargs):
         """
-        Drive the robot at `driveSpeed` and `rotationSpeed` until this command is terminated.
+        Drive the robot at driveSpeed and rotationSpeed until this command is terminated.
         """
         super().__init__()
-        self.setName("Default Drive With Joystick")
 
+        # Initializes variables and makes them callable
+        self.setName("Default Drive With Joystick")
         self.forwardSpeed = forwardSpeed
         if not callable(forwardSpeed):
             self.forwardSpeed = lambda: forwardSpeed
@@ -25,21 +26,25 @@ class SwerveDrive(commands2.Command):
         if not callable(rotationSpeed):
             self.rotationSpeed = lambda: rotationSpeed
 
-        assert deadband >= 0, f"deadband={deadband} is not positive"
+        assert deadband >= 0, f"deadband={deadband} is not positive" # Makes sure the deadband isn't negative
         self.deadband = deadband
 
+        # Initialize variables
         self.drivetrain = drivetrain
         self.kwargs = kwargs
 
-        self.addRequirements(drivetrain)
+        self.addRequirements(drivetrain) # Add requirements
 
     def initialize(self):
-        pass
+        pass # Nothing to do
 
     def isFinished(self) -> bool:
-        return False  # never finishes, you should use it with "withTimeout(...)"
+        return False  # never finishes
 
     def execute(self):
+        """
+        runs the function
+        """
         self.drivetrain.drive(
             applyDeadband(self.forwardSpeed(), self.deadband),
             applyDeadband(self.leftSpeed(), self.deadband),
@@ -48,4 +53,4 @@ class SwerveDrive(commands2.Command):
         )
 
     def end(self, interrupted: bool):
-        self.drivetrain.stop()  # stop immediately if command is ending
+        self.drivetrain.stop()  # stops the drivetrain when it's done

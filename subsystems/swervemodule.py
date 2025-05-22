@@ -15,16 +15,18 @@ class SwerveModule:
         turnMotorInverted = False,
         driveMotorInverted = False,
         encoderInverted = False,
-        motorControllerType = SparkMax
+        motorControllerType = SparkMax # Not used but here for easy changes later
     ) -> None:
-        """Constructs a SwerveModule and configures the driving and turning motor,
+        """
+        Creates a SwerveModule and configures the driving and turning motor,
         encoder, and PID controller.
-        Encoder.
         """
 
-        self.moduleRotationOffset = moduleRotationOffset * math.pi / 180 # degree -> radians
-        self.desiredState = SwerveModuleState(0.0, Rotation2d())
 
+        self.moduleRotationOffset = moduleRotationOffset * math.pi / 180 # Wheel offsets degrees->rad
+        self.desiredState = SwerveModuleState(0.0, Rotation2d()) # Initializes the desired state
+
+        # Creates the 2 Sparks (Motor Controllers)
         self.drivingSparkMax = motorControllerType(
             drivingCANId, SparkLowLevel.MotorType.kBrushless
         )
@@ -32,8 +34,7 @@ class SwerveModule:
             turningCANId, SparkLowLevel.MotorType.kBrushless
         )
 
-        # Factory reset, so we get the SPARKS MAX to a known state before configuring
-        # them. This is useful in case a SPARK MAX is swapped out.
+        # Configures the SparkMax according to their config in the constants file
         self.drivingSparkMax.configure(
             getSwerveDrivingMotorConfig(driveMotorInverted),
             SparkBase.ResetMode.kResetSafeParameters,
@@ -44,67 +45,65 @@ class SwerveModule:
             SparkBase.ResetMode.kResetSafeParameters,
             SparkBase.PersistMode.kPersistParameters)
 
-        # Setup encoders and PID controllers for the driving and turning SPARKS MAX.
-
+        # Setup encoders
         self.drivingEncoder = self.drivingSparkMax.getEncoder()
         self.turningEncoder = self.turningSparkMax.getAbsoluteEncoder()
 
+        # Creates the PID controllers we will use to tell the robot to move
         self.drivingPIDController = self.drivingSparkMax.getClosedLoopController()
         self.turningPIDController = self.turningSparkMax.getClosedLoopController()
 
+        # Set the desired state to be at the current state of the robot (0, current_rotation)
         self.desiredState.angle = Rotation2d(self.turningEncoder.getPosition())
-        self.drivingEncoder.setPosition(0)
+        self.drivingEncoder.setPosition(0) # Resets the driving encoder
 
     def getState(self) -> SwerveModuleState:
-        """Returns the current state of the module.
-
-        :returns: The current state of the module.
         """
-        # Apply chassis angular offset to the encoder position to get the position
-        # relative to the chassis.
+        Returns the current state of the module.
+        """
+        # States are made up of speed of wheel rotation and angle it is at so we get those and return it
         return SwerveModuleState(
             self.drivingEncoder.getVelocity(),
             Rotation2d(self.turningEncoder.getPosition()),
         )
 
     def getPosition(self) -> SwerveModulePosition:
-        """Returns the current position of the module.
+        """
+        Returns the current position of the module.
 
         :returns: The current position of the module.
         """
-        # Apply chassis angular offset to the encoder position to get the position
-        # relative to the chassis.
+        # Similar to pose except that it uses the position of the driving encoder instead of speed.
         return SwerveModulePosition(
             self.drivingEncoder.getPosition(),
             Rotation2d(self.turningEncoder.getPosition()),
         )
 
     def setDesiredState(self, desiredState: SwerveModuleState) -> None:
-        """Sets the desired state for the module.
-
-        :param desiredState: Desired state with speed and angle.
-
         """
+        Sets the desired state for the module. This is what actually runs the robot
+        """
+        # If it's asking you to move a very little amount just don't move
         if abs(desiredState.speed) < ModuleConstants.kDrivingMinSpeedMetersPerSecond:
-            # If there was barely any movement that it wants then just don't move at all.
+            # Checks if in break mode and if it is just stop the robot
             inXBrake = abs(abs(desiredState.angle.degrees()) - 45) < 0.01
             if not inXBrake:
                 self.stop()
                 return
 
-        # Apply offset to the desired state.
+        # Have it creating a new one and setting it from the desireState so that if something needs to
+        # be edited or reversed, etc. it can be easy. But these could 100% be combined.
         correctedDesiredState = SwerveModuleState()
         correctedDesiredState.speed = desiredState.speed
-        # Reversed because this is good place to reverse the wheels for the rotation
         correctedDesiredState.angle = desiredState.angle
 
-        # Optimize the reference state to avoid spinning further than 90 degrees.
+        # Optimize the plan to get to the angle to avoid spinning further than 90 degrees.
         optimizedDesiredState = correctedDesiredState
         SwerveModuleState.optimize(
             optimizedDesiredState, Rotation2d(self.turningEncoder.getPosition())
         )
 
-        # Command driving and turning SPARKS MAX towards their respective set-points.
+        # Let the motors to actually move
         self.drivingPIDController.setReference(
             optimizedDesiredState.speed, SparkLowLevel.ControlType.kVelocity
         )
@@ -112,14 +111,17 @@ class SwerveModule:
             optimizedDesiredState.angle.radians(), SparkLowLevel.ControlType.kPosition
         )
 
+        # Sets the classes desriedState to it.
         self.desiredState = desiredState
 
     def stop(self):
         """
-        Stops the module in place to conserve energy and avoid unnecessary brownouts
+        Stops the module
         """
+        # Turns off both motors
         self.drivingPIDController.setReference(0, SparkLowLevel.ControlType.kVelocity)
         self.turningPIDController.setReference(self.turningEncoder.getPosition(), SparkLowLevel.ControlType.kPosition)
+        # If the desiredState's speed isn't zero set it to zero
         if self.desiredState.speed != 0:
             self.desiredState = SwerveModuleState(speed=0, angle=self.desiredState.angle)
 
@@ -127,5 +129,5 @@ class SwerveModule:
         """
         Zeroes the SwerveModule encoders.
         """
+        # Resets the encoder
         self.drivingEncoder.setPosition(0)
-
